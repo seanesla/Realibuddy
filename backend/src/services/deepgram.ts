@@ -30,7 +30,7 @@ export class DeepgramService {
                 encoding: 'linear16',
                 sample_rate: 16000,
                 channels: 1,
-                endpointing: 3000  // Wait 3 seconds of silence before finalizing (increased from 2s for natural pauses)
+                endpointing: 5000  // Wait 5 seconds of silence before finalizing (increased for more natural speech pauses)
             });
 
             // Handle connection open
