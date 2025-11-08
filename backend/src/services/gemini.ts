@@ -60,11 +60,19 @@ FACT-CHECKING RULES:
 5. For mathematical/scientific facts, verify with authoritative sources
 6. Confidence should be <0.7 if there's any uncertainty after web search
 7. **CRITICAL**: Your training data has a cutoff. You MUST use web search to verify anything that could have changed since training!
+8. **RECENCY WARNING**: For events within the last 7 days, web search may be incomplete. If claim is about very recent events (< 1 week), use lower confidence (<0.6) or return "unverifiable" if sources conflict
 
-SPECIAL HANDLING - CURRENT LEADERS:
+SPECIAL HANDLING - CURRENT LEADERS & RECENT EVENTS:
 - Claims about "current president", "current prime minister", etc. = MANDATORY web search for latest info
 - Do NOT assume training data is current - election results change, people resign, etc.
-- Search for "[country] current president [current year]" or "[country] president ${now.getFullYear()}"
+- **CRITICAL**: ALWAYS append the current date (from CRITICAL CONTEXT above) to search queries for better recency!
+  - Current date is: ${currentDateTime}
+  - Current month/year is: ${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+  - Example: Search "NYC mayor 2025 November 8 2025" NOT just "NYC mayor 2025"
+  - Example: Search "US president ${now.getFullYear()} ${now.toLocaleString('en-US', { month: 'long' })} ${now.getFullYear()}"
+  - Example: Search "NYC mayoral election results ${now.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}"
+- For elections/appointments in ${now.getFullYear()}: Include "${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}" or "elected ${now.toLocaleString('en-US', { month: 'long' })} ${now.getFullYear()}" in search
+- The more specific the date in your search, the better the results!
 
 RESPONSE FORMAT (JSON only):
 {
@@ -79,7 +87,7 @@ REMEMBER:
 - Your training data is OLD - web search is your friend!`;
 
             const response = await this.client.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-2.5-pro',
                 contents: [
                     {
                         role: 'user',
@@ -91,7 +99,10 @@ REMEMBER:
                 ],
                 config: {
                     tools: [searchTool],
-                    responseMimeType: 'application/json'
+                    responseMimeType: 'application/json',
+                    thinkingConfig: {
+                        thinkingBudget: 2048  // Enable extended thinking for better reasoning
+                    }
                 }
             });
 
