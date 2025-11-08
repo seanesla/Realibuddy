@@ -99,25 +99,34 @@ REMEMBER:
                 required: ["verdict", "confidence", "evidence"]
             };
 
-            const response = await this.client.chat.completions.create({
-                model: "sonar-pro",
-                messages: [
-                    {
-                        role: "system",
-                        content: systemPrompt
-                    },
-                    {
-                        role: "user",
-                        content: `Statement to verify: "${claim}"`
+            // Create timeout promise that rejects after 30 seconds
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Perplexity API timeout after 30 seconds')), 30000)
+            );
+
+            // Race the API call against the timeout
+            const response = await Promise.race([
+                this.client.chat.completions.create({
+                    model: "sonar-pro",
+                    messages: [
+                        {
+                            role: "system",
+                            content: systemPrompt
+                        },
+                        {
+                            role: "user",
+                            content: `Statement to verify: "${claim}"`
+                        }
+                    ],
+                    response_format: {
+                        type: "json_schema",
+                        json_schema: {
+                            schema: responseSchema
+                        }
                     }
-                ],
-                response_format: {
-                    type: "json_schema",
-                    json_schema: {
-                        schema: responseSchema
-                    }
-                }
-            });
+                }),
+                timeoutPromise
+            ]);
 
             const responseText = response.choices[0].message.content;
             console.log('Perplexity response:', responseText);
