@@ -14,11 +14,74 @@
 - [x] Add RealiBuddy logo to frontend
 - [x] Fix frontend WebSocket URL (was 3000, now 3001)
 - [x] Resolve Git merge conflicts
+- [x] Fix setTimeout import bug in test-integration.js
+- [x] Fix Pavlok SDK import error (SDK.default access)
+- [x] Fix Gemini API error (google_search instead of google_search_retrieval)
+- [x] Add sendBeep() method to PavlokService for testing
 - [ ] Complete integration testing (comprehensive test suite) <- IN PROGRESS
-- [ ] End-to-end testing with voice and Pavlok device
+- [ ] End-to-end testing with voice and Pavlok device (NO VOICE YET, NO ZAPS - BEEP ONLY)
 - [ ] Deployment
 
 ---
+
+## Checkpoint Summary
+
+Latest session focus: Fixing critical bugs discovered during integration testing setup.
+
+**Major Bugs Fixed:**
+1. **Pavlok SDK Import Error** - Server was crashing on WebSocket connection with "pavlok.auth is not a function"
+   - Root cause: SDK exports as `{ default: <instance> }`, not direct instance
+   - Fix: Access SDK.default in pavlok.ts:9
+   - Status: ✅ FIXED - Server now runs without crashes, WebSocket connections work
+
+2. **Gemini API Error** - API returned 400: "google_search_retrieval is not supported. Please use google_search tool instead"
+   - Root cause: Gemini API changed, deprecated google_search_retrieval
+   - Fix: Changed to `google_search: {}` tool in gemini.ts:22-24
+   - Status: ✅ FIXED - API now uses correct tool name
+
+3. **Test Suite Timeout Errors** - setTimeout imported from 'timers/promises' but used with callback syntax
+   - Root cause: Promise-based setTimeout only takes delay, not callback
+   - Fix: Renamed import to `sleep` and use `await sleep(5100)` syntax
+   - Status: ✅ FIXED - All sleep calls updated in test-integration.js
+
+4. **Testing Safety** - Added sendBeep() method to PavlokService
+   - Per user directive: "dont zap. use beep for testing"
+   - Fix: Added sendBeep() and refactored to private sendStimulus() method
+   - Status: ✅ IMPLEMENTED - Can test without zaps
+
+**Test Results (Partial Run - Interrupted by User):**
+- ✓ PASS: WebSocket Connection (test 1)
+- ✓ PASS: WebSocket Message Protocol (test 2)
+- ✗ FAIL: Deepgram API Connection (test 3) - Network error or non-101 status
+- ✓ PASS: Gemini API Fact-Checking (test 4) - After fix
+- ✗ FAIL: Pavlok API Beep (test 5) - 403 Forbidden (auth issue)
+- ✓ PASS: SafetyManager (test 6)
+- ✓ PASS: Database Persistence (test 7)
+- ✓ PASS: Emergency Stop Persistence (test 8)
+- ✓ PASS: Zap Intensity Calculation (test 9)
+- INTERRUPTED: Hourly Limit (test 10)
+
+**Pass Rate: 7/10 = 70% (before interruption)**
+
+**Current State:**
+- Backend server running cleanly on port 3001
+- WebSocket connections working, sending initial safety_status
+- Gemini API fixed and working
+- Pavlok SDK properly imported
+- Test suite ready to run (needs Deepgram/Pavlok auth debugging)
+
+**Remaining Issues:**
+1. Deepgram API connection failing - needs investigation
+2. Pavlok API returning 403 Forbidden - token may be expired or invalid
+3. Test 10 interrupted - needs full run
+
+**Next Steps:**
+1. Debug Deepgram connection failure
+2. Debug Pavlok 403 error (check token expiry: 1794164250)
+3. Run full test suite to completion
+4. Add comprehensive edge case tests per user requirements
+5. Test frontend with chrome-devtools MCP
+6. NO voice testing, NO zaps - beep only per user directive
 
 ## Comprehensive Handoff Report
 
@@ -125,19 +188,22 @@
 *services/gemini.ts:*
 - Uses @google/genai v0.3.0
 - Model: gemini-2.5-flash
-- google_search_retrieval tool with DynamicRetrievalConfigMode.MODE_DYNAMIC, dynamicThreshold: 0.7
+- google_search tool (updated from deprecated google_search_retrieval) - FIXED IN LATEST SESSION
 - response_mime_type: application/json
 - Structured JSON response: {verdict: 'true'|'false'|'unverifiable', confidence: 0.0-1.0, evidence: string}
 - System prompt instructs to verify facts, return unverifiable for opinions
 - Validates response structure, clamps confidence 0-1, defaults to unverifiable on error
 
 *services/pavlok.ts:*
-- Imports SDK from ../../../.api/apis/pavlok/index.js
-- Auth via pavlok.auth(PAVLOK_API_TOKEN)
-- Calls stimulus_create_api_v5_stimulus_send_post with {stimulus: {stimulusType: 'zap', stimulusValue: 1-100, reason: string}}
+- Imports SDK from ../../../.api/apis/pavlok/index.ts
+- SDK accessed via SDK.default (SDK exports as { default: <instance> }) - FIXED IN LATEST SESSION
+- Auth via sdk.auth(PAVLOK_API_TOKEN)
+- Public methods: sendZap(), sendBeep() - BEEP METHOD ADDED IN LATEST SESSION
+- Private method: sendStimulus(type, intensity, reason)
+- Calls stimulus_create_api_v5_stimulus_send_post with {stimulus: {stimulusType: 'zap'|'beep'|'vibe', stimulusValue: 1-100, reason: string}}
 - Validates intensity 1-100, throws error if out of range
-- Logs zap delivery and errors
-- Can be modified to send 'beep' instead of 'zap' for testing
+- Logs stimulus delivery and errors
+- For testing: Use sendBeep() instead of sendZap() per user directive
 
 *services/database.ts:*
 - Uses better-sqlite3 v11.7.0
@@ -230,7 +296,8 @@
 - Tests all integrations WITHOUT voice/audio
 - Tests use beep instead of zap for safety
 - 10 test cases covering: WebSocket, Deepgram, Gemini, Pavlok, SafetyManager, Database, Emergency Stop, Intensity Calculation, Cooldown, Hourly Limit
-- Current status: Test file created but has a bug (setTimeout import issue)
+- Latest status: 7/10 tests passing (70%), 2 failures (Deepgram connection, Pavlok 403), 1 interrupted
+- setTimeout bug FIXED in latest session (renamed to sleep, proper await syntax)
 
 #### IN PROGRESS
 
@@ -298,7 +365,7 @@
 - Endpoint: POST /v1beta/models/{model}:generateContent
 - Base URL: https://generativelanguage.googleapis.com
 - Auth: x-goog-api-key header (via SDK: GoogleGenAI({apiKey}))
-- Web search: google_search_retrieval tool with dynamic_threshold: 0.7
+- Web search: google_search tool (UPDATED: google_search_retrieval deprecated)
 - Structured output: response_mime_type: "application/json"
 - Response format: {verdict: 'true'|'false'|'unverifiable', confidence: 0.0-1.0, evidence: string}
 
@@ -366,15 +433,22 @@
 - Git merge conflicts occurred from divergent branches, resolved by keeping our implementation
 - 15k+ files were staged for commit due to node_modules, fixed by adding to .gitignore
 - .env path resolution: Backend runs from /backend directory, so .env loads from join(process.cwd(), '..', '.env')
-- Test suite has setTimeout import bug, needs fixing before running tests
+- Test suite setTimeout import bug - FIXED (renamed to sleep, proper await syntax)
+- Pavlok SDK import bug - FIXED (access SDK.default, not SDK directly)
+- Gemini API google_search_retrieval deprecated - FIXED (now uses google_search)
+- Deepgram connection failing with network error - NEEDS INVESTIGATION
+- Pavlok API returning 403 Forbidden - NEEDS INVESTIGATION (token may be expired)
 - User explicitly requested NO zaps during testing, use beep instead
 - User explicitly requested NO voice testing yet
+- User directive: "test absolutely every fucking thing" - comprehensive testing in progress
 
 **Production Readiness Status:**
-- Backend: 100% implemented, 0% tested
+- Backend: 100% implemented, 70% tested (7/10 basic tests passing)
 - Frontend: 100% implemented, 0% tested
-- Integration: 0% tested (test suite created but not running)
-- Status: NOT production ready, needs comprehensive testing
+- Integration: 70% tested (basic suite), edge cases not tested yet
+- Critical bugs: 3 major bugs fixed (Pavlok SDK, Gemini API, test suite setTimeout)
+- Remaining issues: Deepgram connection failure, Pavlok 403 Forbidden
+- Status: NOT production ready, needs full testing and bug fixes
 
 ### Next Steps (Integration Testing)
 

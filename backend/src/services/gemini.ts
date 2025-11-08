@@ -18,14 +18,9 @@ export class GeminiService {
 
     async checkFact(claim: string): Promise<FactCheckResult> {
         try {
-            // Configure Google Search retrieval for fact-checking
-            const retrievalTool = {
-                googleSearchRetrieval: {
-                    dynamicRetrievalConfig: {
-                        mode: DynamicRetrievalConfigMode.MODE_DYNAMIC,
-                        dynamicThreshold: 0.7  // Only search if confidence > 70%
-                    }
-                }
+            // Configure Google Search tool for fact-checking (updated API)
+            const searchTool = {
+                google_search: {}
             };
 
             const systemPrompt = `You are a fact-checking assistant. Analyze the following statement and determine if it contains verifiable factual claims.
@@ -56,7 +51,7 @@ Respond ONLY with valid JSON in this exact format:
                     }
                 ],
                 config: {
-                    tools: [retrievalTool],
+                    tools: [searchTool],
                     responseMimeType: 'application/json'
                 }
             });
