@@ -11,7 +11,11 @@
 - [x] Implement Deepgram streaming integration
 - [x] Implement Gemini fact-checking pipeline
 - [x] Implement Pavlok API integration (direct API v5, not MCP)
-- [ ] End-to-end testing <- IN PROGRESS
+- [x] Add RealiBuddy logo to frontend
+- [x] Fix frontend WebSocket URL (was 3000, now 3001)
+- [x] Resolve Git merge conflicts
+- [ ] Complete integration testing (comprehensive test suite) <- IN PROGRESS
+- [ ] End-to-end testing with voice and Pavlok device
 - [ ] Deployment
 
 ---
@@ -41,20 +45,22 @@
 
 ### Current Implementation Status
 
-#### COMPLETED (100%)
+#### COMPLETED (95%)
 
-**Frontend Application** (2,517 lines of code):
+**Frontend Application** (2,517 lines + logo):
 - Location: /Users/seane/Documents/Github/zapd/Realibuddy/frontend/
 - Files:
-  - index.html - Main UI (272 lines)
+  - index.html - Main UI with RealiBuddy logo (272 lines)
+  - assets/logo.svg - RealiBuddy logo (970KB SVG)
   - css/styles.css - Custom styles (340 lines)
   - css/animated-background.css - Background animations (400 lines)
   - js/app.js - State management & UI updates (681 lines)
   - js/audio.js - Microphone capture & PCM encoding (269 lines)
-  - js/websocket.js - WebSocket client with reconnection (255 lines)
+  - js/websocket.js - WebSocket client (ws://localhost:3001) (255 lines)
   - js/background-animation.js - Canvas animations (297 lines)
 
 **Frontend Features:**
+- Logo in header (64x64px, left of title)
 - Status indicators (Microphone, Connection, STT, Fact-checking)
 - Start/Stop monitoring button
 - Emergency stop button (prominent red, disables all zaps)
@@ -71,16 +77,17 @@
 - Float32 → Int16 conversion
 - Chunks streamed via WebSocket
 
-**Backend Application** (100% complete):
+**Backend Application** (100% implemented, not fully tested):
 - Location: /Users/seane/Documents/Github/zapd/Realibuddy/backend/
 - Server running on port 3001
 - Database: realibuddy.db (SQLite with WAL mode)
+- Health endpoint: http://localhost:3001/health (tested, working)
 
 **Backend Files:**
-- src/server.ts - Express + HTTP + WebSocketServer, global SafetyManager
+- src/server.ts - Express + HTTP + WebSocketServer, global SafetyManager (resolved merge conflicts)
 - src/utils/config.ts - Environment variable loader (.env from parent dir)
 - src/websocket/handler.ts - WebSocket message handler implementing exact protocol
-- src/services/deepgram.ts - Deepgram WebSocket streaming (nova-2, linear16, 16kHz)
+- src/services/deepgram.ts - Deepgram WebSocket streaming (nova-2, linear16, 16kHz) (resolved merge conflicts)
 - src/services/gemini.ts - Gemini API with google_search_retrieval (dynamic_threshold: 0.7)
 - src/services/pavlok.ts - Pavlok API v5 SDK integration (stimulus_create_api_v5_stimulus_send_post)
 - src/services/database.ts - SQLite with zap_history & safety_state tables
@@ -92,8 +99,9 @@
 - Express app with CORS
 - HTTP server + WebSocketServer
 - Global singleton SafetyManager shared across all connections
-- Graceful shutdown handler
-- Health check endpoint at /health
+- Graceful shutdown handler (SIGTERM)
+- Health check endpoint at /health (verified working)
+- Git merge conflicts resolved (kept our implementation over conflicting branch)
 
 *websocket/handler.ts:*
 - Implements exact message protocol from plan.md lines 147-163
@@ -112,6 +120,7 @@
 - Parameters: smart_format, punctuate, interim_results enabled
 - Callbacks for interim and final transcripts
 - Auth: Token DEEPGRAM_API_KEY
+- Git merge conflicts resolved
 
 *services/gemini.ts:*
 - Uses @google/genai v0.3.0
@@ -128,6 +137,7 @@
 - Calls stimulus_create_api_v5_stimulus_send_post with {stimulus: {stimulusType: 'zap', stimulusValue: 1-100, reason: string}}
 - Validates intensity 1-100, throws error if out of range
 - Logs zap delivery and errors
+- Can be modified to send 'beep' instead of 'zap' for testing
 
 *services/database.ts:*
 - Uses better-sqlite3 v11.7.0
@@ -144,7 +154,8 @@
 - In-memory cache: emergencyStopActive, lastZapTime
 - canZap() checks: emergency stop NOT active, < MAX_ZAPS_PER_HOUR (10) in last hour, >= ZAP_COOLDOWN_MS (5000ms) since last zap
 - recordZap(intensity, claim) saves to DB and updates in-memory state
-- emergencyStop() persists to DB, irreversible except manual DB edit or server restart
+- emergencyStop() persists to DB, irreversible except manual DB edit or resetEmergencyStop()
+- resetEmergencyStop() added for testing purposes
 - Cleanup method to delete zaps older than 24 hours
 
 **Pavlok SDK Installation:**
@@ -152,13 +163,14 @@
 - Dependencies: api@^6.1.3, json-schema-to-ts@^2.8.0-beta.0, oas@^20.11.0
 - Added to backend/package.json dependencies
 - Imports SDK from relative path ../../../.api/apis/pavlok/index.js
+- Git merge conflicts in package.json resolved
 
 **Pavlok Authentication:**
 - User registered/logged in via Pavlok API
 - Email: seanesla1156@gmail.com
 - Token obtained via curl to POST /api/v5/users/login
 - Token stored in .env as PAVLOK_API_TOKEN
-- Token expires: 1794164250 (timestamp)
+- Token expires: 1794164250 (Unix timestamp)
 
 **Documentation:**
 - .claude/CLAUDE.md - Project overview and API references
@@ -172,9 +184,9 @@
 - Location: /Users/seane/Documents/Github/zapd/Realibuddy/.git/
 - Branch: main
 - Latest commits:
+  - d836752 resolve: merge conflicts by keeping our backend implementation
+  - 97b2c4a feat(backend): complete backend implementation with all integrations
   - 4db1a5a docs: add project documentation and implementation plan
-  - 2e8854c fffff
-  - c3ccb83 Merge branch 'feat/setup'
 
 **Environment Variables (.env in project root):**
 - DEEPGRAM_API_KEY=b9e96524dc53195e31fa0e974175a9668da4df17
@@ -195,26 +207,16 @@
     "json-schema-to-ts": "^2.8.0-beta.0",
     "oas": "^20.11.0",
     "better-sqlite3": "^11.7.0"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/ws": "^8.5.13",
-    "@types/node": "^22.0.0",
-    "@types/better-sqlite3": "^7.6.12",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "esbuild": "^0.24.0",
-    "vitest": "^2.1.0"
   }
 }
 ```
 
 **Backend Server Status:**
-- Running: Yes
-- Port: 3001
+- Running: Yes (port 3001)
 - Process: npm run dev (tsx watch src/server.ts)
 - Database: Created at backend/realibuddy.db with WAL files
-- SafetyManager: Initialized, emergency_stop=false, last_zap=never, zaps_in_hour=0
+- SafetyManager: Initialized on server start
+- Health check: curl http://localhost:3001/health returns {"status":"ok","timestamp":"..."}
 
 **.gitignore:**
 - .env
@@ -223,16 +225,38 @@
 - .api/
 - get-pavlok-token.js
 
+**Test Infrastructure:**
+- backend/test-integration.js created (comprehensive test suite)
+- Tests all integrations WITHOUT voice/audio
+- Tests use beep instead of zap for safety
+- 10 test cases covering: WebSocket, Deepgram, Gemini, Pavlok, SafetyManager, Database, Emergency Stop, Intensity Calculation, Cooldown, Hourly Limit
+- Current status: Test file created but has a bug (setTimeout import issue)
+
+#### IN PROGRESS
+
+**Integration Testing:**
+- Comprehensive test suite created but not running yet (setTimeout import error)
+- Need to fix test-integration.js to use proper Node.js timer functions
+- Tests planned:
+  1. WebSocket connection and initial safety_status
+  2. WebSocket message protocol (start/stop/emergency)
+  3. Deepgram API connection
+  4. Gemini API fact-checking
+  5. Pavlok API beep delivery (not zap)
+  6. SafetyManager cooldown and counting
+  7. Database persistence
+  8. Emergency stop persistence
+  9. Zap intensity calculation
+  10. Hourly limit (10 zaps max)
+
 #### NOT STARTED
 
-**End-to-End Testing:**
-- Frontend to backend WebSocket connection
+**End-to-End Testing with Voice:**
 - Microphone capture and audio streaming
-- Deepgram real-time transcription
+- Real-time Deepgram transcription
 - Gemini fact-checking with web search
-- Pavlok zap delivery
-- Safety limits enforcement (10 zaps/hour, 5s cooldown, emergency stop)
-- Database persistence across server restarts
+- Actual Pavlok zap delivery (user requested NO zaps during testing, use beep)
+- Safety limits in real conditions
 
 **Deployment:**
 - Not yet planned
@@ -249,6 +273,10 @@
 7. No fake content - No fake quotes, emails, testimonials, or placeholder data
 8. "dont do some rudimentary shit. follow plan.md at all times" - Always reference plan.md for exact specifications
 9. "make a granulated, unambiguous todo list" - Todo lists must be detailed and specific
+10. "test absolutely everything" - Comprehensive testing required
+11. "dont test voice features yet" - Skip microphone/audio testing for now
+12. "do not zap me, just test with beep/tone instead" - Use Pavlok beep, NOT zap during testing
+13. "ultrathink" - Think deeply and carefully about all aspects
 
 #### Technical Decisions Made:
 - Zap intensity: Proportional to confidence (user's request: "how about the zap strength is proportional to the lie percentage")
@@ -258,6 +286,10 @@
 - Database: SQLite for local persistence, survives server restarts
 - SafetyManager: Global singleton shared across all WebSocket connections (not per-connection)
 - .env location: Project root, backend loads via dotenv with path: join(process.cwd(), '..', '.env')
+- Frontend WebSocket URL: ws://localhost:3001 (was 3000, fixed)
+- Logo placement: Header, 64x64px, left of title with flexbox layout
+- Merge conflicts: Resolved by keeping our implementation (git checkout --ours)
+- Testing approach: Use beep instead of zap, no voice testing yet
 
 #### Confirmed API Specifications:
 
@@ -284,6 +316,7 @@
 - SDK method: stimulus_create_api_v5_stimulus_send_post({stimulus: {...}})
 - Body: {stimulus: {stimulusType: 'zap'|'beep'|'vibe', stimulusValue: 1-100, reason: string}}
 - CRITICAL: Intensity range is 1-100, NOT 0-255 (user corrected this assumption)
+- For testing: Use 'beep' instead of 'zap'
 
 #### Safety Requirements (IMPLEMENTED):
 - Maximum 10 zaps per hour (MAX_ZAPS_PER_HOUR config)
@@ -296,7 +329,7 @@
 ### WebSocket Message Protocol (IMPLEMENTED)
 
 **Client → Server:**
-- { type: 'audio_chunk', data: ArrayBuffer }  // Binary audio (detected if data[0] !== 0x7B)
+- Binary audio (detected if data[0] !== 0x7B): Raw PCM audio chunks
 - { type: 'start_monitoring', baseIntensity?: number }
 - { type: 'stop_monitoring' }
 - { type: 'emergency_stop' }
@@ -326,25 +359,35 @@
 - .env: /Users/seane/Documents/Github/zapd/Realibuddy/.env (parent of backend)
 - Database: /Users/seane/Documents/Github/zapd/Realibuddy/backend/realibuddy.db
 - Pavlok SDK: /Users/seane/Documents/Github/zapd/Realibuddy/.api/apis/pavlok/
+- Logo: /Users/seane/Documents/Github/zapd/Realibuddy/frontend/assets/logo.svg
 
 **Known Issues & Decisions:**
-- Background animation files exist but landing page was deleted (user's choice)
-- Free tier rate limits need to be considered for testing
-- User encountered 15k+ files staged for commit - fixed by adding node_modules/, .api/, *.db to .gitignore
+- Frontend WebSocket URL was pointing to port 3000, fixed to 3001
+- Git merge conflicts occurred from divergent branches, resolved by keeping our implementation
+- 15k+ files were staged for commit due to node_modules, fixed by adding to .gitignore
 - .env path resolution: Backend runs from /backend directory, so .env loads from join(process.cwd(), '..', '.env')
+- Test suite has setTimeout import bug, needs fixing before running tests
+- User explicitly requested NO zaps during testing, use beep instead
+- User explicitly requested NO voice testing yet
 
-### Next Steps (End-to-End Testing)
+**Production Readiness Status:**
+- Backend: 100% implemented, 0% tested
+- Frontend: 100% implemented, 0% tested
+- Integration: 0% tested (test suite created but not running)
+- Status: NOT production ready, needs comprehensive testing
 
-1. Open frontend/index.html in browser
-2. Test WebSocket connection to ws://localhost:3001
-3. Test microphone access and audio capture
-4. Test Deepgram transcription (interim and final)
-5. Test Gemini fact-checking with verifiable claims
-6. Test Pavlok zap delivery with false claims
-7. Test safety limits (10 zaps/hour, 5s cooldown)
-8. Test emergency stop persistence
-9. Test database persistence across server restarts
-10. Fix any bugs discovered during testing
+### Next Steps (Integration Testing)
+
+1. Fix test-integration.js setTimeout import issue
+2. Run comprehensive test suite (10 tests)
+3. Fix any bugs discovered
+4. Verify all integrations work without voice/audio
+5. Test Pavlok beep delivery (not zap)
+6. Verify database persistence
+7. Verify safety limits enforcement
+8. Document test results
+9. Only after all tests pass: Begin voice/audio testing
+10. Only after voice tests pass: Begin zap testing (with user's explicit permission)
 
 ### Important Files for Next Developer
 
@@ -364,10 +407,14 @@
 - backend/src/services/safety.ts - Safety enforcement
 
 **Frontend:**
-- frontend/index.html - Main UI
+- frontend/index.html - Main UI with logo
+- frontend/assets/logo.svg - RealiBuddy logo (970KB)
 - frontend/js/app.js - Application state and UI logic
-- frontend/js/websocket.js - WebSocket client
+- frontend/js/websocket.js - WebSocket client (connects to ws://localhost:3001)
 - frontend/js/audio.js - Microphone capture and PCM encoding
+
+**Testing:**
+- backend/test-integration.js - Comprehensive test suite (has setTimeout bug)
 
 **Documentation:**
 - .claude/CLAUDE.md - Quick reference for Claude Code
@@ -386,10 +433,15 @@ cd /Users/seane/Documents/Github/zapd/Realibuddy/backend
 npm run dev
 ```
 
-**Build backend:**
+**Run integration tests (after fixing setTimeout bug):**
 ```bash
 cd /Users/seane/Documents/Github/zapd/Realibuddy/backend
-npm run build
+node test-integration.js
+```
+
+**Check backend health:**
+```bash
+curl http://localhost:3001/health
 ```
 
 **Open frontend:**
@@ -405,4 +457,32 @@ sqlite3 /Users/seane/Documents/Github/zapd/Realibuddy/backend/realibuddy.db
 **Reset emergency stop (if needed):**
 ```sql
 UPDATE safety_state SET emergency_stop_active = 0 WHERE id = 1;
+```
+
+**Clear all test data:**
+```sql
+DELETE FROM zap_history;
+UPDATE safety_state SET emergency_stop_active = 0 WHERE id = 1;
+```
+
+### Test Suite Bug to Fix
+
+The test-integration.js file has this error:
+```
+TypeError [ERR_INVALID_ARG_TYPE]: The "delay" argument must be of type number. Received function
+```
+
+The issue is on line 39 where we import `setTimeout` from 'timers/promises' but then use it with the wrong syntax. The fix is to change:
+```javascript
+import { setTimeout } from 'timers/promises';
+```
+
+And use it as:
+```javascript
+await setTimeout(5100);  // Not: setTimeout(() => {...}, 5100)
+```
+
+Or alternatively, don't import from timers/promises and use the standard setTimeout with await:
+```javascript
+await new Promise(resolve => setTimeout(resolve, 5100));
 ```

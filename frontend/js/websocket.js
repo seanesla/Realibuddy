@@ -6,7 +6,7 @@
 class WebSocketClient {
     constructor() {
         this.ws = null;
-        this.url = 'ws://localhost:3000';
+        this.url = 'ws://localhost:3001';
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 1000; // Start with 1 second
