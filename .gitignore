@@ -200,4 +200,18 @@ $RECYCLE.BIN/
 # environment variables
 .env
 
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Node modules
+node_modules/
+
+# API SDK
+.api/
+
+# Temp files
+get-pavlok-token.js
+
 # End of https://www.toptal.com/developers/gitignore/api/pycharm,macos,windows,visualstudiocode

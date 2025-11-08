@@ -1,4 +1,8 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { join } from 'path';
+
+// Load .env from project root (parent of backend directory)
+config({ path: join(process.cwd(), '..', '.env') });
 
 /**
  * Loads and validates required environment variables.
@@ -15,9 +19,7 @@ function getEnvVar(key: string): string {
 // API Keys
 export const DEEPGRAM_API_KEY = getEnvVar('DEEPGRAM_API_KEY');
 export const GEMINI_API_KEY = getEnvVar('GEMINI_API_KEY');
-
-// Webhooks
-export const ZAPIER_WEBHOOK_URL = getEnvVar('ZAPIER_WEBHOOK_URL');
+export const PAVLOK_API_TOKEN = getEnvVar('PAVLOK_API_TOKEN');
 
 // Server Configuration
 export const PORT = process.env.PORT ?? '3001';
