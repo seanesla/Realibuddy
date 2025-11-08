@@ -4,7 +4,7 @@
  */
 
 import WebSocket from 'ws';
-import { setTimeout } from 'timers/promises';
+import { setTimeout as sleep } from 'timers/promises';
 
 const WS_URL = 'ws://localhost:3001';
 const TESTS_PASSED = [];
@@ -244,13 +244,13 @@ async function testSafetyManager() {
     assert(safety.canZap() === false, 'Should not be able to zap during cooldown');
 
     console.log('  Waiting 5 seconds for cooldown...');
-    await setTimeout(5100);
+    await sleep(5100);
 
     assert(safety.canZap() === true, 'Should be able to zap after cooldown');
 
     // Record more zaps
     safety.recordZap(40, 'Test claim 2');
-    await setTimeout(5100);
+    await sleep(5100);
     safety.recordZap(50, 'Test claim 3');
 
     assert(safety.getZapCount() === 3, 'Zap count should be 3');
@@ -272,7 +272,7 @@ async function testDatabasePersistence() {
 
     const safety1 = new SafetyManager();
     safety1.recordZap(20, 'Persistence test 1');
-    await setTimeout(5100);
+    await sleep(5100);
     safety1.recordZap(30, 'Persistence test 2');
 
     // Create new SafetyManager (simulates restart)
@@ -354,7 +354,7 @@ async function testHourlyLimit() {
 
     // Record 10 zaps
     for (let i = 0; i < 10; i++) {
-        if (i > 0) await setTimeout(5100); // Wait for cooldown
+        if (i > 0) await sleep(5100); // Wait for cooldown
 
         assert(safety.canZap() === true, `Should be able to deliver zap ${i + 1}`);
         safety.recordZap(30, `Hourly limit test zap ${i + 1}`);
@@ -362,7 +362,7 @@ async function testHourlyLimit() {
 
     assert(safety.getZapsInLastHour() === 10, 'Should have 10 zaps in last hour');
 
-    await setTimeout(5100); // Wait for cooldown
+    await sleep(5100); // Wait for cooldown
 
     // 11th zap should be blocked
     assert(safety.canZap() === false, 'Should NOT be able to deliver 11th zap (hourly limit)');
