@@ -133,7 +133,7 @@ async function testDeepgramAPI() {
 
     // Import directly to test
     const { createClient } = await import('@deepgram/sdk');
-    const { DEEPGRAM_API_KEY } = await import('./src/utils/config.js');
+    const { DEEPGRAM_API_KEY } = await import('./src/utils/config.ts');
 
     return new Promise((resolve, reject) => {
         try {
@@ -172,7 +172,7 @@ async function testDeepgramAPI() {
 async function testGeminiAPI() {
     console.log('\n--- Test 4: Gemini API Fact-Checking ---');
 
-    const { GeminiService } = await import('./src/services/gemini.js');
+    const { GeminiService } = await import('./src/services/gemini.ts');
 
     const gemini = new GeminiService();
     const testClaim = 'The sky is blue';
@@ -196,8 +196,8 @@ async function testGeminiAPI() {
 async function testPavlokAPIBeep() {
     console.log('\n--- Test 5: Pavlok API (BEEP instead of ZAP) ---');
 
-    const pavlok = (await import('../.api/apis/pavlok/index.js')).default;
-    const { PAVLOK_API_TOKEN } = await import('./src/utils/config.js');
+    const pavlok = (await import('../.api/apis/pavlok/index.ts')).default;
+    const { PAVLOK_API_TOKEN } = await import('./src/utils/config.ts');
 
     pavlok.auth(PAVLOK_API_TOKEN);
 
@@ -223,8 +223,8 @@ async function testPavlokAPIBeep() {
 async function testSafetyManager() {
     console.log('\n--- Test 6: SafetyManager ---');
 
-    const { SafetyManager } = await import('./src/services/safety.js');
-    const { getDatabase } = await import('./src/services/database.js');
+    const { SafetyManager } = await import('./src/services/safety.ts');
+    const { getDatabase } = await import('./src/services/database.ts');
 
     // Clear database first
     const db = getDatabase();
@@ -263,8 +263,8 @@ async function testSafetyManager() {
 async function testDatabasePersistence() {
     console.log('\n--- Test 7: Database Persistence ---');
 
-    const { SafetyManager } = await import('./src/services/safety.js');
-    const { getDatabase } = await import('./src/services/database.js');
+    const { SafetyManager } = await import('./src/services/safety.ts');
+    const { getDatabase } = await import('./src/services/database.ts');
 
     // Clear and record 2 zaps
     const db = getDatabase();
@@ -292,8 +292,8 @@ async function testDatabasePersistence() {
 async function testEmergencyStopPersistence() {
     console.log('\n--- Test 8: Emergency Stop Persistence ---');
 
-    const { SafetyManager } = await import('./src/services/safety.js');
-    const { getDatabase } = await import('./src/services/database.js');
+    const { SafetyManager } = await import('./src/services/safety.ts');
+    const { getDatabase } = await import('./src/services/database.ts');
 
     const db = getDatabase();
     db.clearAllData();
@@ -344,8 +344,8 @@ async function testZapIntensityCalculation() {
 async function testHourlyLimit() {
     console.log('\n--- Test 10: Safety Hourly Limit (10 zaps/hour) ---');
 
-    const { SafetyManager } = await import('./src/services/safety.js');
-    const { getDatabase } = await import('./src/services/database.js');
+    const { SafetyManager } = await import('./src/services/safety.ts');
+    const { getDatabase } = await import('./src/services/database.ts');
 
     const db = getDatabase();
     db.clearAllData();

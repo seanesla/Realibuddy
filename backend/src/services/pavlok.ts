@@ -5,8 +5,9 @@ export class PavlokService {
     private sdk: any; // Using any temporarily to debug
 
     constructor() {
-        // SDK is imported as { default: <instance> }, need to access .default
-        this.sdk = (SDK as any).default || SDK;
+        // SDK is exported as a class, need to instantiate it
+        const SDKClass = (SDK as any).default || SDK;
+        this.sdk = new SDKClass();
 
         if (typeof this.sdk.auth !== 'function') {
             throw new Error(`SDK.auth is not a function. Check Pavlok SDK import.`);
