@@ -14,6 +14,8 @@ class WebSocketClient {
         this.isConnecting = false;
         this.messageHandlers = new Map();
         this.connectionStateCallbacks = [];
+        this.currentAudioSource = null;
+        this.currentAudioContext = null;
     }
 
     /**
@@ -100,6 +102,9 @@ class WebSocketClient {
      */
     async playAudio(audioData) {
         try {
+            // Stop any currently playing audio first
+            this.stopAudio();
+
             // Convert Blob to ArrayBuffer if needed
             let buffer = audioData;
             if (audioData instanceof Blob) {
@@ -107,16 +112,47 @@ class WebSocketClient {
             }
 
             // Create audio context and play
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const audioBuffer = await audioContext.decodeAudioData(buffer);
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-            source.start(0);
+            this.currentAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await this.currentAudioContext.decodeAudioData(buffer);
+            this.currentAudioSource = this.currentAudioContext.createBufferSource();
+            this.currentAudioSource.buffer = audioBuffer;
+            this.currentAudioSource.connect(this.currentAudioContext.destination);
+
+            // Clear references when audio finishes
+            this.currentAudioSource.onended = () => {
+                this.currentAudioSource = null;
+                this.currentAudioContext = null;
+            };
+
+            this.currentAudioSource.start(0);
 
             console.log('Playing audio...');
         } catch (error) {
             console.error('Error playing audio:', error);
+        }
+    }
+
+    /**
+     * Stop currently playing audio
+     */
+    stopAudio() {
+        if (this.currentAudioSource) {
+            try {
+                this.currentAudioSource.stop();
+                console.log('Stopped audio playback');
+            } catch (error) {
+                // Ignore errors if already stopped
+            }
+            this.currentAudioSource = null;
+        }
+
+        if (this.currentAudioContext) {
+            try {
+                this.currentAudioContext.close();
+            } catch (error) {
+                // Ignore errors
+            }
+            this.currentAudioContext = null;
         }
     }
 

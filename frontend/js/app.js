@@ -34,6 +34,7 @@ const elements = {
 
     // Control buttons
     toggleMonitoringBtn: document.getElementById('toggle-monitoring-btn'),
+    stopTalkingBtn: document.getElementById('stop-talking-btn'),
     emergencyStopBtn: document.getElementById('emergency-stop-btn'),
     clearTranscriptBtn: document.getElementById('clear-transcript-btn'),
     clearFactsBtn: document.getElementById('clear-facts-btn'),
@@ -97,6 +98,11 @@ async function initialize() {
 function setupEventListeners() {
     // Toggle monitoring button
     elements.toggleMonitoringBtn.addEventListener('click', handleToggleMonitoring);
+
+    // Stop talking button
+    elements.stopTalkingBtn.addEventListener('click', () => {
+        wsClient.stopAudio();
+    });
 
     // Emergency stop button
     elements.emergencyStopBtn.addEventListener('click', handleEmergencyStop);
@@ -223,8 +229,11 @@ async function handleToggleMonitoring() {
                 wsClient.sendAudio(audioData);
             });
 
-            // Send start monitoring message
-            wsClient.send({ type: 'start_monitoring' });
+            // Send start monitoring message with current base intensity
+            wsClient.send({
+                type: 'start_monitoring',
+                baseIntensity: appState.baseIntensity
+            });
 
             // Update state
             appState.isMonitoring = true;
