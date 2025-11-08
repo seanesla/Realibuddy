@@ -1,6 +1,21 @@
 // History and Dashboard Management
 const API_BASE = 'http://localhost:3001/api/history';
 
+// Listen for new fact-checks and refresh active tab
+document.addEventListener('factCheckComplete', (event) => {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (!activeTab) return;
+
+    const activeTabName = activeTab.getAttribute('data-tab');
+
+    // Only refresh if Dashboard or History tab is active
+    if (activeTabName === 'dashboard') {
+        loadDashboardData();
+    } else if (activeTabName === 'history') {
+        loadHistorySessions();
+    }
+});
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -152,6 +152,9 @@ function setupWebSocketHandlers() {
 
         updateStatistics();
         updateGeminiStatus('idle');
+
+        // Notify history/dashboard system of new fact-check
+        document.dispatchEvent(new CustomEvent('factCheckComplete', { detail: message }));
     });
 
     // Fact check started
