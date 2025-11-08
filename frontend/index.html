@@ -98,6 +98,25 @@
                     </p>
 
                     <div class="space-y-3">
+                        <!-- Source Type Filter -->
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">
+                                Source Filter
+                            </label>
+                            <select
+                                id="source-filter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+                                <option value="all">All Sources</option>
+                                <option value="authoritative">Authoritative (Wikipedia, .edu, .gov)</option>
+                                <option value="news">News & Media</option>
+                                <option value="social">Social Media (Reddit, X)</option>
+                                <option value="academic">Academic (.edu, journals)</option>
+                            </select>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Choose which types of sources to use for fact-checking
+                            </div>
+                        </div>
+
                         <textarea
                             id="text-input"
                             rows="3"

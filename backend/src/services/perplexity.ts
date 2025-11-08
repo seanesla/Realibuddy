@@ -1,5 +1,6 @@
 import Perplexity from '@perplexity-ai/perplexity_ai';
 import { PERPLEXITY_API_KEY } from '../utils/config.js';
+import { getDomainsForFilter, SourceFilterType } from '../utils/sourceDomains.js';
 
 interface FactCheckResult {
     verdict: 'true' | 'false' | 'unverifiable';
@@ -22,8 +23,11 @@ export class PerplexityService {
         });
     }
 
-    async checkFact(claim: string): Promise<FactCheckResult> {
+    async checkFact(claim: string, sourceFilter: SourceFilterType = 'all'): Promise<FactCheckResult> {
         try {
+            // Get domain filter if specified
+            const searchDomainFilter = getDomainsForFilter(sourceFilter);
+
             // Get current date/time for context
             const now = new Date();
             const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -105,7 +109,8 @@ REMEMBER:
                 required: ["verdict", "confidence", "evidence"]
             };
 
-            const response = await this.client.chat.completions.create({
+            // Build API request with optional domain filter
+            const apiRequest: any = {
                 model: "sonar-pro",
                 messages: [
                     {
@@ -123,7 +128,18 @@ REMEMBER:
                         schema: responseSchema
                     }
                 }
-            });
+            };
+
+            // Add search_domain_filter if specified (max 20 domains)
+            if (searchDomainFilter && searchDomainFilter.length > 0) {
+                apiRequest.search_domain_filter = searchDomainFilter.slice(0, 20);
+                console.log(`Using source filter: ${sourceFilter} (${apiRequest.search_domain_filter.length} domains)`);
+                console.log('Domains being used:', apiRequest.search_domain_filter);
+            } else {
+                console.log('No source filter applied (using all sources)');
+            }
+
+            const response = await this.client.chat.completions.create(apiRequest);
 
             const responseText = response.choices[0].message.content;
             console.log('Perplexity response:', responseText);

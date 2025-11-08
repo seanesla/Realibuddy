@@ -39,6 +39,7 @@ const elements = {
     clearFactsBtn: document.getElementById('clear-facts-btn'),
     submitTextBtn: document.getElementById('submit-text-btn'),
     textInput: document.getElementById('text-input'),
+    sourceFilter: document.getElementById('source-filter'),
 
     // Statistics
     zapCount: document.getElementById('zap-count'),
@@ -378,12 +379,16 @@ async function handleTextInputSubmit() {
         // Show fact-check started
         showSuccess('Fact-checking statement...');
 
+        // Get selected source filter
+        const sourceFilter = elements.sourceFilter.value || 'all';
+
         // Send text input message to backend for fact-checking
         wsClient.send({
             type: 'text_input',
             text: text,
             timestamp: timestamp,
-            baseIntensity: appState.baseIntensity
+            baseIntensity: appState.baseIntensity,
+            sourceFilter: sourceFilter
         });
 
         // Clear input

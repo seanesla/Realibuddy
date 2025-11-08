@@ -11,6 +11,7 @@ interface ClientMessage {
     baseIntensity?: number;
     text?: string;
     timestamp?: number;
+    sourceFilter?: 'all' | 'authoritative' | 'news' | 'social' | 'academic';
 }
 
 interface ServerMessage {
@@ -105,7 +106,8 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     claim: text
                                 });
 
-                                const result = await perplexityService.checkFact(text);
+                                // Use sourceFilter if provided (for voice monitoring, we'll use 'all' by default)
+                                const result = await perplexityService.checkFact(text, 'all');
 
                                 sendMessage(ws, {
                                     type: 'fact_check_result',
@@ -205,7 +207,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                         claim: message.text
                     });
 
-                    const result = await perplexityService.checkFact(message.text);
+                    // Use sourceFilter from message or default to 'all'
+                    const sourceFilter = message.sourceFilter || 'all';
+                    const result = await perplexityService.checkFact(message.text, sourceFilter);
 
                     sendMessage(ws, {
                         type: 'fact_check_result',
