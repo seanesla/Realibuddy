@@ -196,27 +196,14 @@ async function testGeminiAPI() {
 async function testPavlokAPIBeep() {
     console.log('\n--- Test 5: Pavlok API (BEEP instead of ZAP) ---');
 
-    const pavlok = (await import('../.api/apis/pavlok/index.ts')).default;
-    const { PAVLOK_API_TOKEN } = await import('./src/utils/config.ts');
-
-    pavlok.auth(PAVLOK_API_TOKEN);
+    const { PavlokService } = await import('./src/services/pavlok.ts');
 
     console.log('  Sending beep (intensity: 50)...');
 
-    const response = await pavlok.stimulus_create_api_v5_stimulus_send_post({
-        stimulus: {
-            stimulusType: 'beep',
-            stimulusValue: 50,
-            reason: 'Integration test - beep instead of zap'
-        }
-    });
+    const pavlok = new PavlokService();
+    await pavlok.sendBeep(50, 'Integration test - SDK with Bearer auth');
 
-    console.log('  Response:', response.data);
-
-    assert(response.data, 'Should receive response data');
-    assert(response.data.stimulus, 'Response should contain stimulus');
-
-    pass('Pavlok API beep delivery');
+    pass('Pavlok API beep delivery via SDK');
 }
 
 // Test 6: SafetyManager

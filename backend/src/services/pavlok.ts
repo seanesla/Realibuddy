@@ -2,18 +2,19 @@ import SDK from '../../../.api/apis/pavlok/index.ts';
 import { PAVLOK_API_TOKEN } from '../utils/config.js';
 
 export class PavlokService {
-    private sdk: any; // Using any temporarily to debug
+    private sdk: any;
 
     constructor() {
-        // SDK is exported as a class, need to instantiate it
-        const SDKClass = (SDK as any).default || SDK;
-        this.sdk = new SDKClass();
+        // SDK requires TWO parameters for Bearer token: auth('Bearer', token)
+        this.sdk = (SDK as any).default?.default || (SDK as any).default || SDK;
 
         if (typeof this.sdk.auth !== 'function') {
             throw new Error(`SDK.auth is not a function. Check Pavlok SDK import.`);
         }
 
-        this.sdk.auth(PAVLOK_API_TOKEN);
+        // Pavlok API requires "Bearer " prefix despite OpenAPI spec saying apiKey type
+        // Pass the full "Bearer <token>" string as single auth parameter
+        this.sdk.auth(`Bearer ${PAVLOK_API_TOKEN}`);
     }
 
     async sendZap(intensity: number, reason: string): Promise<void> {
@@ -33,7 +34,7 @@ export class PavlokService {
 
             console.log(`Sending ${type}: intensity=${intensity}, reason="${reason}"`);
 
-            // Call Pavlok API v5 stimulus endpoint
+            // Use Pavlok SDK with proper Bearer token auth
             const response = await this.sdk.stimulus_create_api_v5_stimulus_send_post({
                 stimulus: {
                     stimulusType: type,

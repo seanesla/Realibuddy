@@ -113,14 +113,14 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     evidence: result.evidence
                                 });
 
-                                // Deliver zap if it's a lie
+                                // Deliver BEEP if it's a lie (using beep for testing, not zap)
                                 if (result.verdict === 'false' && safetyManager.canZap()) {
                                     // Calculate intensity: Math.floor(baseIntensity * confidence)
                                     // SAFETY CAP: Never exceed 100
                                     const calculatedIntensity = Math.floor(currentBaseIntensity * result.confidence);
                                     const intensity = Math.min(Math.max(1, calculatedIntensity), 100);
 
-                                    await pavlokService.sendZap(intensity, `False claim: ${text}`);
+                                    await pavlokService.sendBeep(intensity, `False claim: ${text}`);
                                     safetyManager.recordZap(intensity, text);
 
                                     sendMessage(ws, {
