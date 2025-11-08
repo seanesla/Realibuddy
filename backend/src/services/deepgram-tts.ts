@@ -31,9 +31,39 @@ export class DeepgramTTSService {
                 return response;
             }
 
-            // If it's a stream-like object, convert to buffer
-            if (response && typeof response === 'object') {
-                const stream = await response.getStream?.();
+            // If it's a SpeakRestClient object with getStream() method
+            if (response && typeof response === 'object' && typeof response.getStream === 'function') {
+                const stream = await response.getStream();
+
+                // Handle web ReadableStream (from fetch API)
+                if (stream && typeof stream.getReader === 'function') {
+                    const reader = stream.getReader();
+                    const chunks: Uint8Array[] = [];
+
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            chunks.push(value);
+                        }
+                    } finally {
+                        reader.releaseLock();
+                    }
+
+                    // Concatenate chunks into single buffer
+                    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                    const audioBuffer = Buffer.alloc(totalLength);
+                    let offset = 0;
+
+                    for (const chunk of chunks) {
+                        audioBuffer.set(chunk, offset);
+                        offset += chunk.length;
+                    }
+
+                    return audioBuffer;
+                }
+
+                // Handle Node.js stream with arrayBuffer method
                 if (stream && typeof stream.arrayBuffer === 'function') {
                     const arrayBuffer = await stream.arrayBuffer();
                     return Buffer.from(arrayBuffer);
