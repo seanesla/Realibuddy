@@ -22,29 +22,25 @@ export class DeepgramTTSService {
                 }
             );
 
-            // Get audio as buffer
-            const audioBuffer = await response.getStream();
+            // The response should be the audio data directly
+            if (response instanceof ArrayBuffer) {
+                return Buffer.from(response);
+            }
 
-            // Convert stream to buffer
-            const chunks: Buffer[] = [];
-            return new Promise((resolve, reject) => {
-                if (!audioBuffer) {
-                    reject(new Error('No audio stream returned'));
-                    return;
+            if (Buffer.isBuffer(response)) {
+                return response;
+            }
+
+            // If it's a stream-like object, convert to buffer
+            if (response && typeof response === 'object') {
+                const stream = await response.getStream?.();
+                if (stream && typeof stream.arrayBuffer === 'function') {
+                    const arrayBuffer = await stream.arrayBuffer();
+                    return Buffer.from(arrayBuffer);
                 }
+            }
 
-                audioBuffer.on('data', (chunk: Buffer) => {
-                    chunks.push(chunk);
-                });
-
-                audioBuffer.on('end', () => {
-                    resolve(Buffer.concat(chunks));
-                });
-
-                audioBuffer.on('error', (error: Error) => {
-                    reject(error);
-                });
-            });
+            throw new Error('Unexpected response type from Deepgram speak API');
         } catch (error) {
             console.error('Error generating speech:', error);
             throw error;
