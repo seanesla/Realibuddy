@@ -4,6 +4,7 @@ import { PerplexityService } from '../services/perplexity.js';
 import { PavlokService } from '../services/pavlok.js';
 import { SafetyManager } from '../services/safety.js';
 import { getDatabase } from '../services/database.js';
+import DeepgramTTSService from '../services/deepgram-tts.js';
 import { BASE_ZAP_INTENSITY } from '../utils/config.js';
 
 interface ClientMessage {
@@ -21,6 +22,7 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
     let deepgramService: DeepgramService | null = null;
     const perplexityService = new PerplexityService();
     const pavlokService = new PavlokService();
+    const ttsService = new DeepgramTTSService();
     const db = getDatabase();
     let currentBaseIntensity = BASE_ZAP_INTENSITY; // Default from config, can be updated by client
     let currentSessionId: number | null = null; // Track active session
@@ -124,6 +126,25 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     confidence: result.confidence,
                                     evidence: result.evidence
                                 });
+
+                                // Generate TTS for verdict + description
+                                try {
+                                    // Format: "VERDICT. Description"
+                                    const verdictText = result.verdict.charAt(0).toUpperCase() + result.verdict.slice(1);
+                                    const description = typeof result.evidence === 'string'
+                                        ? result.evidence
+                                        : (result.evidence as any).description || JSON.stringify(result.evidence);
+
+                                    const ttsText = `${verdictText}. ${description}`;
+
+                                    const audioBuffer = await ttsService.generateSpeech(ttsText);
+
+                                    // Send audio as binary message
+                                    ws.send(audioBuffer);
+                                } catch (ttsError) {
+                                    console.error('Error generating TTS:', ttsError);
+                                    // Don't fail the whole fact-check if TTS fails
+                                }
 
                                 // Record fact-check to database
                                 let wasZapped = false;

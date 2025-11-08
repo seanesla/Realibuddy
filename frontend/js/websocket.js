@@ -69,6 +69,13 @@ class WebSocketClient {
      */
     handleMessage(event) {
         try {
+            // Check if this is binary audio data
+            if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+                this.playAudio(event.data);
+                return;
+            }
+
+            // Try to parse as JSON
             const message = JSON.parse(event.data);
             console.log('Received message:', message);
 
@@ -85,6 +92,31 @@ class WebSocketClient {
             }
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
+        }
+    }
+
+    /**
+     * Play received audio data
+     */
+    async playAudio(audioData) {
+        try {
+            // Convert Blob to ArrayBuffer if needed
+            let buffer = audioData;
+            if (audioData instanceof Blob) {
+                buffer = await audioData.arrayBuffer();
+            }
+
+            // Create audio context and play
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(buffer);
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+
+            console.log('Playing audio...');
+        } catch (error) {
+            console.error('Error playing audio:', error);
         }
     }
 
