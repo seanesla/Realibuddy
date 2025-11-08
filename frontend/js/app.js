@@ -34,7 +34,6 @@ const elements = {
 
     // Control buttons
     toggleMonitoringBtn: document.getElementById('toggle-monitoring-btn'),
-    emergencyStopBtn: document.getElementById('emergency-stop-btn'),
     clearTranscriptBtn: document.getElementById('clear-transcript-btn'),
     clearFactsBtn: document.getElementById('clear-facts-btn'),
     submitTextBtn: document.getElementById('submit-text-btn'),
@@ -103,9 +102,6 @@ async function initialize() {
 function setupEventListeners() {
     // Toggle monitoring button
     elements.toggleMonitoringBtn.addEventListener('click', handleToggleMonitoring);
-
-    // Emergency stop button
-    elements.emergencyStopBtn.addEventListener('click', handleEmergencyStop);
 
     // Text input submit button
     elements.submitTextBtn.addEventListener('click', handleTextInputSubmit);
@@ -307,9 +303,6 @@ function handleEmergencyStop() {
     appState.emergencyStopActive = true;
 
     // Update UI
-    elements.emergencyStopBtn.textContent = 'EMERGENCY STOP ACTIVE';
-    elements.emergencyStopBtn.classList.add('activated');
-    elements.emergencyStopBtn.disabled = true;
     elements.toggleMonitoringBtn.disabled = true;
 
     showError('EMERGENCY STOP ACTIVATED - All zaps disabled. Refresh page to reset.');
