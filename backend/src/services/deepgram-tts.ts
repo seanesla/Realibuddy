@@ -16,7 +16,7 @@ export class DeepgramTTSService {
                     text,
                 },
                 {
-                    model: 'aura-2',
+                    model: 'aura-asteria-en',
                     encoding: 'linear16',
                     sample_rate: 16000,
                 }
