@@ -22,8 +22,6 @@ The system acts as an automated "truth enforcer" that:
 
 - Delivers electric stimulation punishment when lies are detected
 
-- Generates customized "roasts" (humorous insults) to reinforce the correction
-
 
 
 ## How It Works (Complete Flow)
@@ -100,21 +98,7 @@ The system acts as an automated "truth enforcer" that:
 
 
 
-### 6. **Roast Generation**
-
-- Claude generates a witty, sarcastic insult specific to your lie
-
-- Varies style (disappointed parent, snarky friend, game show host, etc.)
-
-- Keeps roasts under 50 words
-
-- Optional text-to-speech reads the roast aloud
-
-- Examples: "Really? You thought we wouldn't fact-check that? The truth hurts less than your credibility right now."
-
-
-
-### 7. **User Interface**
+### 6. **User Interface**
 
 - Status indicator: Listening / Processing / Idle
 
@@ -198,8 +182,6 @@ The system acts as an automated "truth enforcer" that:
 
 ✅ Electric shock delivery on detected lies
 
-✅ Dynamic roast generation for each violation
-
 ✅ Safety limits (max zaps per hour, cooldowns, emergency stop)
 
 ✅ Live UI showing transcription and verdicts
@@ -211,8 +193,6 @@ The system acts as an automated "truth enforcer" that:
 - Adjustable sensitivity (how strict the fact-checker is)
 
 - Exportable session logs
-
-- Multiple roast personality styles
 
 - Sound effects (buzzer for lies, ding for truth)
 
@@ -236,25 +216,23 @@ The system acts as an automated "truth enforcer" that:
 
 
 
-## Development Timeline (10 Hours)
+## Development Timeline
 
 
 
-**Hour 0-1:** Environment setup, API credentials, dependencies
+**Phase 1:** Environment setup, API credentials, dependencies
 
-**Hour 1-3:** Speech-to-text pipeline with real-time streaming
+**Phase 2:** Speech-to-text pipeline with real-time streaming
 
-**Hour 3-5:** Fact-checking engine with claim extraction
+**Phase 3:** Fact-checking engine with claim extraction
 
-**Hour 5-6:** Pavlok integration with safety features
+**Phase 4:** Pavlok integration with safety features
 
-**Hour 6-7:** Roast generation system
+**Phase 5:** User interface development
 
-**Hour 7-8:** User interface development
+**Phase 6:** End-to-end testing and bug fixes
 
-**Hour 8-9:** End-to-end testing and bug fixes
-
-**Hour 9-10:** Polish, documentation, final testing
+**Phase 7:** Polish, documentation, final testing
 
 
 
@@ -374,7 +352,7 @@ After using the system, users should:
 
 
 
-The 10-hour timeline focuses on getting the core loop working:
+The MVP focuses on getting the core loop working:
 
 1. Speak
 
@@ -385,8 +363,6 @@ The 10-hour timeline focuses on getting the core loop working:
 4. Fact-check
 
 5. Shock if false
-
-6. Roast
 
 
 
