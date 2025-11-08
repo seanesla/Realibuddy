@@ -68,6 +68,10 @@ export class DeepgramTTSService {
                     const arrayBuffer = await stream.arrayBuffer();
                     return Buffer.from(arrayBuffer);
                 }
+
+                // Debug: log what we actually got
+                console.error('Stream type:', stream?.constructor?.name);
+                console.error('Stream keys:', stream ? Object.keys(stream) : 'null');
             }
 
             throw new Error('Unexpected response type from Deepgram speak API');
