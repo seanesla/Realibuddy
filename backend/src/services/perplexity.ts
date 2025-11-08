@@ -5,6 +5,12 @@ interface FactCheckResult {
     verdict: 'true' | 'false' | 'unverifiable';
     confidence: number;
     evidence: string;
+    citations?: string[];
+    sources?: Array<{
+        title: string;
+        url: string;
+        date?: string;
+    }>;
 }
 
 export class PerplexityService {
@@ -122,18 +128,22 @@ REMEMBER:
             const responseText = response.choices[0].message.content;
             console.log('Perplexity response:', responseText);
 
-            // Log citations if available
+            // Capture citations if available
+            let citations: string[] = [];
             if ('citations' in response && Array.isArray(response.citations)) {
-                console.log('Citations:', response.citations);
+                citations = response.citations;
+                console.log('Citations:', citations);
             }
 
-            // Log search results if available
+            // Capture search results if available
+            let sources: Array<{ title: string; url: string; date?: string }> = [];
             if ('search_results' in response && Array.isArray(response.search_results)) {
-                console.log('Search results:', response.search_results.slice(0, 3).map((r: any) => ({
-                    title: r.title,
-                    url: r.url,
+                sources = response.search_results.slice(0, 5).map((r: any) => ({
+                    title: r.title || 'Untitled',
+                    url: r.url || '',
                     date: r.date
-                })));
+                }));
+                console.log('Search results:', sources);
             }
 
             // Log usage/cost info if available
@@ -163,6 +173,14 @@ REMEMBER:
 
             // Clamp confidence between 0 and 1
             result.confidence = Math.max(0, Math.min(1, result.confidence));
+
+            // Add citations and sources to result
+            if (citations.length > 0) {
+                result.citations = citations;
+            }
+            if (sources.length > 0) {
+                result.sources = sources;
+            }
 
             return result;
 

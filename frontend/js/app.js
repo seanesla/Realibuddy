@@ -563,6 +563,24 @@ function displayFactCheck(data) {
 
     const time = new Date().toLocaleTimeString();
 
+    // Build sources HTML if available
+    let sourcesHtml = '';
+    if (data.sources && data.sources.length > 0) {
+        sourcesHtml = '<div class="fact-sources"><div class="sources-header">Sources used:</div><div class="sources-list">';
+        data.sources.forEach((source, index) => {
+            const displayDate = source.date ? ` (${source.date})` : '';
+            sourcesHtml += `
+                <div class="source-item">
+                    <span class="source-number">${index + 1}.</span>
+                    <a href="${source.url}" target="_blank" rel="noopener noreferrer" class="source-link">
+                        ${escapeHtml(source.title)}${displayDate}
+                    </a>
+                </div>
+            `;
+        });
+        sourcesHtml += '</div></div>';
+    }
+
     card.innerHTML = `
         <div class="fact-claim">${escapeHtml(data.claim)}</div>
         <div class="flex items-center justify-between mb-2">
@@ -573,6 +591,7 @@ function displayFactCheck(data) {
             <div class="confidence-fill ${confidenceClass}" style="width: ${confidence}%"></div>
         </div>
         ${data.evidence ? `<div class="fact-evidence">${escapeHtml(data.evidence)}</div>` : ''}
+        ${sourcesHtml}
         <div class="fact-timestamp">${time}</div>
     `;
 

@@ -338,3 +338,50 @@ input[type="range"],
 .fact-card {
     transition-property: all;
 }
+
+/* Sources display styling */
+.fact-sources {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #374151;
+}
+
+.sources-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.source-item {
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.source-number {
+    color: #6b7280;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.source-link {
+    color: #60a5fa;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    word-break: break-all;
+}
+
+.source-link:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}

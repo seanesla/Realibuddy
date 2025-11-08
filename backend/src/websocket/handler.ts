@@ -112,7 +112,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     claim: text,
                                     verdict: result.verdict,
                                     confidence: result.confidence,
-                                    evidence: result.evidence
+                                    evidence: result.evidence,
+                                    citations: result.citations,
+                                    sources: result.sources
                                 });
 
                                 // Deliver BEEP if it's a lie (using beep for testing, not zap)
@@ -210,7 +212,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                         claim: message.text,
                         verdict: result.verdict,
                         confidence: result.confidence,
-                        evidence: result.evidence
+                        evidence: result.evidence,
+                        citations: result.citations,
+                        sources: result.sources
                     });
 
                     // Deliver BEEP if it's a lie (using beep for testing, not zap)
