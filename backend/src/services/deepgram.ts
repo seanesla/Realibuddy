@@ -29,7 +29,8 @@ export class DeepgramService {
                 interim_results: true,
                 encoding: 'linear16',
                 sample_rate: 16000,
-                channels: 1
+                channels: 1,
+                endpointing: 2000  // Wait 2 seconds of silence before finalizing (default is ~1000ms)
             });
 
             // Handle connection open
