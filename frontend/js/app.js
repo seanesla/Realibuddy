@@ -37,6 +37,8 @@ const elements = {
     emergencyStopBtn: document.getElementById('emergency-stop-btn'),
     clearTranscriptBtn: document.getElementById('clear-transcript-btn'),
     clearFactsBtn: document.getElementById('clear-facts-btn'),
+    submitTextBtn: document.getElementById('submit-text-btn'),
+    textInput: document.getElementById('text-input'),
 
     // Statistics
     zapCount: document.getElementById('zap-count'),
@@ -88,6 +90,9 @@ async function initialize() {
     // Start UI update loops
     startUIUpdates();
 
+    // Auto-connect to WebSocket server
+    autoConnect();
+
     console.log('RealiBuddy initialized');
 }
 
@@ -100,6 +105,17 @@ function setupEventListeners() {
 
     // Emergency stop button
     elements.emergencyStopBtn.addEventListener('click', handleEmergencyStop);
+
+    // Text input submit button
+    elements.submitTextBtn.addEventListener('click', handleTextInputSubmit);
+
+    // Allow Enter key to submit text (Ctrl+Enter for newline)
+    elements.textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+            e.preventDefault();
+            handleTextInputSubmit();
+        }
+    });
 
     // Clear buttons
     elements.clearTranscriptBtn.addEventListener('click', clearTranscript);
@@ -296,6 +312,91 @@ function handleEmergencyStop() {
     elements.toggleMonitoringBtn.disabled = true;
 
     showError('EMERGENCY STOP ACTIVATED - All zaps disabled. Refresh page to reset.');
+}
+
+/**
+ * Auto-connect to WebSocket server on page load
+ */
+async function autoConnect() {
+    if (wsClient.isConnected()) {
+        console.log('Already connected');
+        return;
+    }
+
+    try {
+        console.log('Auto-connecting to WebSocket server...');
+
+        // Get WebSocket URL from settings
+        const wsUrl = elements.websocketUrl.value || 'ws://localhost:3001';
+
+        // Connect to WebSocket
+        wsClient.connect(wsUrl);
+
+        // Wait for connection with timeout
+        await waitForConnection();
+
+        console.log('Auto-connected successfully');
+        showSuccess('Connected to server');
+
+    } catch (error) {
+        console.error('Auto-connection failed:', error);
+        console.log('You can try refreshing the page or check if backend is running');
+        // Don't show error toast on auto-connect failure - just log it
+    }
+}
+
+/**
+ * Handle text input submission for fact-checking
+ */
+async function handleTextInputSubmit() {
+    const text = elements.textInput.value.trim();
+
+    // Validation
+    if (!text) {
+        showError('Please enter a statement to fact-check');
+        return;
+    }
+
+    if (!wsClient.isConnected()) {
+        showError('Not connected to server. Please wait for connection.');
+        return;
+    }
+
+    if (appState.emergencyStopActive) {
+        showError('Emergency stop is active. Refresh page to reset.');
+        return;
+    }
+
+    try {
+        // Disable button during processing
+        elements.submitTextBtn.disabled = true;
+        elements.submitTextBtn.textContent = 'Checking...';
+
+        // Trigger fact-checking
+        const timestamp = Date.now();
+
+        // Show fact-check started
+        showSuccess('Fact-checking statement...');
+
+        // Send text input message to backend for fact-checking
+        wsClient.send({
+            type: 'text_input',
+            text: text,
+            timestamp: timestamp,
+            baseIntensity: appState.baseIntensity
+        });
+
+        // Clear input
+        elements.textInput.value = '';
+
+    } catch (error) {
+        console.error('Error submitting text:', error);
+        showError(`Failed to submit: ${error.message}`);
+    } finally {
+        // Re-enable button
+        elements.submitTextBtn.disabled = false;
+        elements.submitTextBtn.textContent = 'Check This Statement';
+    }
 }
 
 /**

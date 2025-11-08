@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@api/pavlok": "file:.api/apis/pavlok"
+  }
+}
