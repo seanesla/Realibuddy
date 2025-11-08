@@ -62,11 +62,26 @@
             </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Tab Navigation -->
+        <div class="flex space-x-4 mb-6 border-b border-gray-700">
+            <button class="tab-btn active px-4 py-2 font-bold border-b-2 border-blue-500 text-blue-400 transition-colors" data-tab="main">
+                Main
+            </button>
+            <button class="tab-btn px-4 py-2 font-bold border-b-2 border-gray-700 text-gray-400 hover:text-gray-300 transition-colors" data-tab="dashboard">
+                Dashboard
+            </button>
+            <button class="tab-btn px-4 py-2 font-bold border-b-2 border-gray-700 text-gray-400 hover:text-gray-300 transition-colors" data-tab="history">
+                History
+            </button>
+        </div>
 
-            <!-- Left Column: Controls & Stats -->
-            <div class="lg:col-span-1 space-y-6">
+        <!-- Main Tab Content -->
+        <div id="main-tab" class="tab-content">
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left Column: Controls & Stats -->
+                <div class="lg:col-span-1 space-y-6">
 
                 <!-- Control Panel -->
                 <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
@@ -243,6 +258,105 @@
                 </div>
             </div>
         </div>
+        </div> <!-- End Main Tab -->
+
+        <!-- Dashboard Tab Content -->
+        <div id="dashboard-tab" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Total Zaps -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <div class="text-gray-400 text-sm mb-2">Total Zaps</div>
+                    <div id="dash-total-zaps" class="text-3xl font-bold text-red-400">0</div>
+                </div>
+
+                <!-- Total Claims -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <div class="text-gray-400 text-sm mb-2">Total Claims Checked</div>
+                    <div id="dash-total-claims" class="text-3xl font-bold text-blue-400">0</div>
+                </div>
+
+                <!-- Truth Rate -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <div class="text-gray-400 text-sm mb-2">Overall Truth Rate</div>
+                    <div id="dash-truth-rate" class="text-3xl font-bold text-green-400">0%</div>
+                </div>
+
+                <!-- False Rate -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <div class="text-gray-400 text-sm mb-2">False Rate</div>
+                    <div id="dash-false-rate" class="text-3xl font-bold text-red-400">0%</div>
+                </div>
+            </div>
+
+            <!-- Charts and Recent Claims -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Statistics Chart -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Claim Verdicts Distribution</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">True</span>
+                                <span id="dash-true-count" class="text-green-400 font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded h-2">
+                                <div id="dash-true-bar" class="bg-green-500 h-2 rounded" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">False</span>
+                                <span id="dash-false-count" class="text-red-400 font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded h-2">
+                                <div id="dash-false-bar" class="bg-red-500 h-2 rounded" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Unverifiable</span>
+                                <span id="dash-unverif-count" class="text-yellow-400 font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded h-2">
+                                <div id="dash-unverif-bar" class="bg-yellow-500 h-2 rounded" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Claims -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg max-h-80 overflow-y-auto">
+                    <h2 class="text-xl font-bold mb-4">Recent Claims</h2>
+                    <div id="recent-claims-list" class="space-y-3 text-sm">
+                        <div class="text-gray-500 italic">No claims yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab Content -->
+        <div id="history-tab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Session History</h2>
+                <div class="space-x-2">
+                    <button id="export-csv-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium">
+                        Export CSV
+                    </button>
+                    <button id="export-json-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium">
+                        Export JSON
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sessions List -->
+            <div id="sessions-list" class="space-y-4">
+                <div class="bg-gray-800 rounded-lg p-6 text-gray-400 text-center">
+                    Loading sessions...
+                </div>
+            </div>
+        </div>
 
         <!-- Error Toast -->
         <div id="error-toast"
@@ -270,6 +384,7 @@
     <!-- Scripts -->
     <script src="js/websocket.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/history.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

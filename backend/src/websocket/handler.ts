@@ -3,6 +3,7 @@ import { DeepgramService } from '../services/deepgram.js';
 import { PerplexityService } from '../services/perplexity.js';
 import { PavlokService } from '../services/pavlok.js';
 import { SafetyManager } from '../services/safety.js';
+import { getDatabase } from '../services/database.js';
 import { BASE_ZAP_INTENSITY } from '../utils/config.js';
 
 interface ClientMessage {
@@ -20,7 +21,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
     let deepgramService: DeepgramService | null = null;
     const perplexityService = new PerplexityService();
     const pavlokService = new PavlokService();
+    const db = getDatabase();
     let currentBaseIntensity = BASE_ZAP_INTENSITY; // Default from config, can be updated by client
+    let currentSessionId: number | null = null; // Track active session
 
     // Send initial safety status
     sendMessage(ws, {
@@ -56,6 +59,11 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
             deepgramService.close();
             deepgramService = null;
         }
+        // End session if still active
+        if (currentSessionId !== null) {
+            db.endSession(currentSessionId);
+            currentSessionId = null;
+        }
     });
 
     ws.on('error', (error) => {
@@ -79,6 +87,10 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
         switch (message.type) {
             case 'start_monitoring':
                 if (!deepgramServiceRef) {
+                    // Create a new session
+                    currentSessionId = db.createSession(Date.now());
+                    console.log(`Session ${currentSessionId} started`);
+
                     deepgramService = new DeepgramService(
                         // On interim transcript
                         (text: string, timestamp: number) => {
@@ -113,6 +125,10 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     evidence: result.evidence
                                 });
 
+                                // Record fact-check to database
+                                let wasZapped = false;
+                                let zapIntensity: number | null = null;
+
                                 // Deliver BEEP if it's a lie (using beep for testing, not zap)
                                 if (result.verdict === 'false' && safetyManager.canZap()) {
                                     // Calculate intensity: Math.floor(baseIntensity * confidence)
@@ -122,6 +138,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
 
                                     await pavlokService.sendBeep(intensity, `False claim: ${text}`);
                                     safetyManager.recordZap(intensity, text);
+
+                                    wasZapped = true;
+                                    zapIntensity = intensity;
 
                                     sendMessage(ws, {
                                         type: 'zap_delivered',
@@ -134,6 +153,19 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                         zapCount: safetyManager.getZapCount(),
                                         canZap: safetyManager.canZap()
                                     });
+                                }
+
+                                // Store fact-check in database
+                                if (currentSessionId !== null) {
+                                    db.recordFactCheck(
+                                        currentSessionId,
+                                        text,
+                                        result.verdict.toUpperCase() as any,
+                                        result.confidence,
+                                        JSON.stringify(result.evidence),
+                                        wasZapped,
+                                        zapIntensity
+                                    );
                                 }
                             } catch (error) {
                                 console.error('Error during fact-checking:', error);
@@ -157,11 +189,17 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                 if (deepgramService) {
                     deepgramService.close();
                     deepgramService = null;
-                    sendMessage(ws, {
-                        type: 'success',
-                        message: 'Monitoring stopped'
-                    });
                 }
+                // End active session
+                if (currentSessionId !== null) {
+                    db.endSession(currentSessionId);
+                    console.log(`Session ${currentSessionId} ended`);
+                    currentSessionId = null;
+                }
+                sendMessage(ws, {
+                    type: 'success',
+                    message: 'Monitoring stopped'
+                });
                 break;
 
             case 'emergency_stop':
