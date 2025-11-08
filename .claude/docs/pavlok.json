@@ -1,0 +1,177 @@
+{
+  "api_name": "Pavlok API v5",
+  "base_url": "https://api.pavlok.com/api/v5",
+  "authentication": {
+    "method": "API Key",
+    "header": "Authorization",
+    "note": "Get API key from developer dashboard (requires login)"
+  },
+  "endpoints": {
+    "authentication": {
+      "login": {
+        "method": "POST",
+        "path": "/users/login",
+        "body": {
+          "user": {
+            "email": "string (required)",
+            "password": "string (required)"
+          }
+        },
+        "response_200": {
+          "user": {
+            "email": "string (required)",
+            "username": "string",
+            "phone": "string",
+            "settings": {
+              "id": "integer (required)",
+              "token": "string (required)",
+              "volts": "integer (required)"
+            }
+          }
+        }
+      },
+      "register": {
+        "method": "POST",
+        "path": "/users/",
+        "body": {
+          "user": {
+            "email": "string (required)",
+            "password": "string (required)"
+          }
+        }
+      },
+      "forget_password": {
+        "method": "POST",
+        "path": "/users/forget-password",
+        "body": {
+          "user": {
+            "email": "string (required)"
+          }
+        }
+      }
+    },
+    "user": {
+      "get_current_user": {
+        "method": "GET",
+        "path": "/user/",
+        "response_200": {
+          "user": {
+            "username": "string",
+            "email": "string (required)",
+            "phone": "string",
+            "settings": {
+              "id": "integer (required)",
+              "token": "string (required)",
+              "volts": "integer (required)"
+            }
+          }
+        }
+      },
+      "update_current_user": {
+        "method": "PUT",
+        "path": "/user/",
+        "body": {
+          "user": "UserInUpdate object"
+        }
+      }
+    },
+    "stimulus": {
+      "send_stimulus": {
+        "method": "POST",
+        "path": "/stimulus/send",
+        "description": "Create a stimulus and send to current user",
+        "constraints": {
+          "stimulusType": "Must be one of: ['zap', 'beep', 'vibe']",
+          "stimulusValue": "Must be in range 1-100 inclusive"
+        },
+        "body": {
+          "stimulus": {
+            "stimulusType": "string (required) - One of: zap, beep, vibe",
+            "stimulusValue": "integer (required) - Range: 1-100",
+            "reason": "string (optional)"
+          }
+        },
+        "response_200": {
+          "stimulus": {
+            "id": "integer",
+            "type": "string (required)",
+            "value": "integer (required)",
+            "sentAt": "date-time",
+            "sentBy": "integer",
+            "sentTo": "integer (required)",
+            "createdAt": "date-time (required)",
+            "updatedAt": "date-time (required)",
+            "via": "string",
+            "message": "string",
+            "reason": "string",
+            "meta": "string"
+          }
+        }
+      },
+      "get_all_stimulus": {
+        "method": "GET",
+        "path": "/stimulus/sent/me",
+        "description": "Get all stimulus sent to current user",
+        "response_200": {
+          "stimulusList": "array of Stimulus objects"
+        }
+      }
+    }
+  },
+  "integrations": {
+    "zapier": {
+      "url": "https://zapier.com/apps/pavlok-wearable-device-da47193/integrations",
+      "mcp_tools": [
+        "mcp__zapier__pavlok_wearable_device_zap",
+        "mcp__zapier__pavlok_wearable_device_beep",
+        "mcp__zapier__pavlok_wearable_device_vibrate",
+        "mcp__zapier__pavlok_wearable_device_send_song"
+      ]
+    },
+    "ifttt": {
+      "url": "https://ifttt.com/pavlo"
+    },
+    "apple_shortcuts": {
+      "description": "Trigger Pavlok based on blacklisted apps, time-of-day filters",
+      "use_cases": [
+        "Zap when opening specific apps before certain times",
+        "Mindfulness reminders for social media usage"
+      ]
+    },
+    "tasker_android": {
+      "download": "https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm",
+      "send_intent": {
+        "action": "One of: beep, vibe, zap",
+        "package": "com.pavlok3.core",
+        "extra": "intensity:[value] - Multiple of 10, maximum 100 (optional)"
+      },
+      "examples": {
+        "zap_30_percent": {
+          "action": "zap",
+          "extra": "intensity:30",
+          "package": "com.pavlok3.core"
+        },
+        "beep_default": {
+          "action": "beep",
+          "package": "com.pavlok3.core"
+        },
+        "vibrate_50_percent": {
+          "action": "vibe",
+          "extra": "intensity:50",
+          "package": "com.pavlok3.core"
+        }
+      },
+      "requirements": "Pavlok app version 2.1.9 or newer"
+    }
+  },
+  "constraints": {
+    "stimulus_types": ["zap", "beep", "vibe"],
+    "intensity_range": "1-100 (inclusive)",
+    "tasker_intensity": "Multiple of 10, maximum 100"
+  },
+  "external_links": {
+    "help": "https://help.pavlok.com/",
+    "zapier": "https://zapier.com/apps/pavlok-wearable-device-da47193/integrations",
+    "ifttt": "https://ifttt.com/pavlo"
+  }
+}

@@ -1,0 +1,386 @@
+{
+  "api_name": "Deepgram API",
+  "description": "Deepgram provides powerful Speech-to-Text, Text-to-Speech, and Voice Agent capabilities for developers. Transcribe audio, generate speech, and build intelligent voice applications with their comprehensive API and SDKs.",
+  "base_url": "https://api.deepgram.com",
+  "websocket_base_url": "wss://api.deepgram.com",
+  "authentication": {
+    "type": "API Key",
+    "header": "Authorization",
+    "format": "Token YOUR_DEEPGRAM_API_KEY",
+    "alternative": "bearer YOUR_DEEPGRAM_TOKEN",
+    "description": "API key obtained from Deepgram Console"
+  },
+  "key_features": {
+    "speech_to_text_streaming": {
+      "description": "Real-time audio transcription via WebSocket with sub-300ms latency",
+      "supported": true,
+      "protocol": "WebSocket",
+      "latency": "sub-300ms"
+    },
+    "speech_to_text_prerecorded": {
+      "description": "Transcribe pre-recorded audio files",
+      "supported": true,
+      "protocol": "HTTP POST"
+    },
+    "text_to_speech_streaming": {
+      "description": "Real-time text-to-speech via WebSocket",
+      "supported": true,
+      "protocol": "WebSocket"
+    },
+    "text_to_speech_prerecorded": {
+      "description": "Generate audio files from text",
+      "supported": true,
+      "protocol": "HTTP POST"
+    },
+    "voice_agent": {
+      "description": "Build conversational voice agents",
+      "supported": true
+    },
+    "diarization": {
+      "description": "Speaker identification and separation",
+      "supported": true
+    },
+    "interim_results": {
+      "description": "Receive ongoing transcription updates as audio is processed",
+      "supported": true
+    }
+  },
+  "models": {
+    "speech_to_text": {
+      "nova": "Latest and most accurate model",
+      "nova-3": "Specialized model with keyterm prompting support",
+      "flux-general-en": "Turn-based conversational model with context detection"
+    },
+    "text_to_speech": {
+      "aura": "Base TTS model",
+      "aura-2": "Enhanced TTS model",
+      "aura-2-thalia-en": "Specific voice model",
+      "aura-asteria-en": "Default voice model"
+    }
+  },
+  "endpoints": {
+    "streaming_stt": {
+      "method": "WSS",
+      "path": "wss://api.deepgram.com/v1/listen",
+      "description": "Real-time audio transcription via WebSocket",
+      "parameters": {
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "required": true,
+            "format": "Token YOUR_DEEPGRAM_API_KEY or bearer YOUR_DEEPGRAM_TOKEN"
+          }
+        },
+        "query": {
+          "model": {
+            "type": "enum",
+            "required": true,
+            "description": "AI model to use for transcription",
+            "examples": ["nova", "nova-3", "flux-general-en"]
+          },
+          "encoding": {
+            "type": "enum",
+            "required": false,
+            "description": "Expected audio encoding",
+            "options": ["linear16", "mulaw", "opus", "flac"]
+          },
+          "sample_rate": {
+            "type": "integer",
+            "required": false,
+            "description": "Sample rate of submitted audio. Required when encoding is provided"
+          },
+          "channels": {
+            "type": "integer",
+            "required": false,
+            "description": "Number of channels in submitted audio"
+          },
+          "interim_results": {
+            "type": "boolean",
+            "default": false,
+            "description": "Receive ongoing transcription updates as audio is received"
+          },
+          "punctuate": {
+            "type": "boolean",
+            "default": false,
+            "description": "Add punctuation and capitalization to transcript"
+          },
+          "diarize": {
+            "type": "boolean",
+            "default": false,
+            "description": "Recognize speaker changes. Each word assigned a speaker number starting at 0"
+          },
+          "language": {
+            "type": "enum",
+            "default": "en",
+            "description": "BCP-47 language tag hinting at primary spoken language"
+          },
+          "smart_format": {
+            "type": "boolean",
+            "default": false,
+            "description": "Apply formatting to improve readability"
+          },
+          "endpointing": {
+            "type": "integer",
+            "required": false,
+            "description": "Milliseconds to wait before finalizing transcription when speaker pauses. Can be false to disable"
+          },
+          "vad_events": {
+            "type": "boolean",
+            "default": false,
+            "description": "Receive Speech Started messages when speech begins"
+          }
+        },
+        "send_messages": {
+          "ListenV1Media": {
+            "type": "binary",
+            "required": true,
+            "description": "Send audio or video data to be transcribed"
+          },
+          "ListenV1Finalize": {
+            "type": "message",
+            "required": false,
+            "description": "Flush the WebSocket stream"
+          },
+          "ListenV1CloseStream": {
+            "type": "message",
+            "required": false,
+            "description": "Close the WebSocket stream"
+          },
+          "ListenV1KeepAlive": {
+            "type": "message",
+            "required": false,
+            "description": "Keep the WebSocket stream alive"
+          }
+        },
+        "receive_messages": {
+          "ListenV1Results": {
+            "type": "message",
+            "description": "Transcription results"
+          },
+          "ListenV1Metadata": {
+            "type": "message",
+            "description": "Metadata about the transcription"
+          },
+          "ListenV1UtteranceEnd": {
+            "type": "message",
+            "description": "Utterance end event"
+          },
+          "ListenV1SpeechStarted": {
+            "type": "message",
+            "description": "Speech started event"
+          }
+        }
+      }
+    },
+    "flux_conversational_stt": {
+      "method": "WSS",
+      "path": "wss://api.deepgram.com/v2/listen",
+      "description": "Turn-based conversational speech recognition with contextual turn detection",
+      "parameters": {
+        "query": {
+          "model": {
+            "type": "enum",
+            "required": true,
+            "value": "flux-general-en"
+          },
+          "encoding": {
+            "type": "enum",
+            "required": true,
+            "value": "linear16",
+            "description": "Currently only supports raw signed little-endian 16-bit PCM"
+          },
+          "sample_rate": {
+            "type": "integer",
+            "required": true,
+            "description": "Sample rate of audio stream in Hz"
+          },
+          "eager_eot_threshold": {
+            "type": "float",
+            "required": false,
+            "range": "0.3-0.9",
+            "description": "End-of-turn confidence required to fire eager end-of-turn event"
+          },
+          "eot_threshold": {
+            "type": "float",
+            "required": false,
+            "range": "0.5-0.9",
+            "description": "End-of-turn confidence required to finish a turn"
+          },
+          "eot_timeout_ms": {
+            "type": "integer",
+            "required": false,
+            "description": "Finish turn after this many ms regardless of EOT confidence"
+          }
+        },
+        "send_messages": {
+          "ListenV2Media": {
+            "type": "binary",
+            "required": true,
+            "description": "Send audio or video data to be transcribed"
+          },
+          "ListenV2CloseStream": {
+            "type": "message",
+            "required": false,
+            "description": "Close the WebSocket stream"
+          }
+        },
+        "receive_messages": {
+          "ListenV2Connected": {
+            "type": "message",
+            "description": "Connection established message"
+          },
+          "ListenV2TurnInfo": {
+            "type": "message",
+            "description": "Turn information message"
+          },
+          "ListenV2FatalError": {
+            "type": "message",
+            "description": "Fatal error message"
+          }
+        }
+      }
+    },
+    "streaming_tts": {
+      "method": "WSS",
+      "path": "wss://api.deepgram.com/v1/speak",
+      "description": "Real-time text-to-speech via WebSocket",
+      "parameters": {
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "required": true,
+            "format": "Token YOUR_DEEPGRAM_API_KEY or bearer YOUR_DEEPGRAM_TOKEN"
+          }
+        },
+        "query": {
+          "model": {
+            "type": "enum",
+            "default": "aura-asteria-en",
+            "description": "AI model used to process submitted text",
+            "examples": ["aura", "aura-2", "aura-2-thalia-en"]
+          },
+          "encoding": {
+            "type": "enum",
+            "default": "linear16",
+            "description": "Expected encoding of audio output for streaming TTS",
+            "options": ["linear16", "mulaw"]
+          },
+          "sample_rate": {
+            "type": "enum",
+            "default": "24000",
+            "description": "Sample rate for output audio",
+            "options": ["8000", "16000", "24000", "44100", "48000"]
+          },
+          "mip_opt_out": {
+            "type": "boolean",
+            "required": false,
+            "description": "Opt out of Deepgram Model Improvement Program"
+          }
+        },
+        "send_messages": {
+          "SpeakV1Text": {
+            "type": "json",
+            "required": true,
+            "description": "Text to convert to audio",
+            "format": "{\"type\": \"Speak\", \"text\": \"Your text here\"}"
+          },
+          "SpeakV1Flush": {
+            "type": "json",
+            "required": false,
+            "description": "Flush buffer and receive final audio",
+            "format": "{\"type\": \"Flush\"}"
+          },
+          "SpeakV1Clear": {
+            "type": "json",
+            "required": false,
+            "description": "Clear buffer and start new audio generation",
+            "format": "{\"type\": \"Clear\"}"
+          },
+          "SpeakV1Close": {
+            "type": "json",
+            "required": false,
+            "description": "Flush buffer and close connection gracefully",
+            "format": "{\"type\": \"Close\"}"
+          }
+        },
+        "receive_messages": {
+          "SpeakV1Audio": {
+            "type": "binary",
+            "description": "Audio chunks as they are generated"
+          },
+          "SpeakV1Metadata": {
+            "type": "json",
+            "description": "Metadata about audio generation"
+          },
+          "SpeakV1Flushed": {
+            "type": "json",
+            "description": "Metadata about flushed audio"
+          },
+          "SpeakV1Cleared": {
+            "type": "json",
+            "description": "Metadata about cleared buffer"
+          },
+          "SpeakV1Warning": {
+            "type": "json",
+            "description": "Warning about audio generation"
+          }
+        }
+      }
+    }
+  },
+  "rate_limits": {
+    "tts_streaming_concurrent_requests": {
+      "aura": "Starting at 25 concurrent requests",
+      "aura-2": "Starting at 25 concurrent requests"
+    },
+    "note": "Rate limits vary by plan. Check official documentation for current limits."
+  },
+  "pricing": {
+    "note": "Pricing varies by feature, model, and usage volume. MIP opt-out affects pricing. Check official documentation for current pricing."
+  },
+  "code_examples": {
+    "streaming_stt_javascript": {
+      "description": "Connect to Deepgram STT WebSocket and handle real-time transcription",
+      "language": "javascript",
+      "code": "const { createClient } = require('@deepgram/sdk');\n\nconst deepgram = createClient(process.env.DEEPGRAM_API_KEY);\n\nconst dgConnection = deepgram.transcription.live({\n  model: 'nova',\n  punctuate: true,\n  interim_results: true,\n  encoding: 'linear16',\n  sample_rate: 16000\n});\n\ndgConnection.addListener('open', () => {\n  console.log('Connection opened');\n});\n\ndgConnection.addListener('message', (transcription) => {\n  console.log('Transcription:', transcription);\n});\n\n// Send audio data\ndgConnection.send(audioBuffer);"
+    },
+    "streaming_stt_python": {
+      "description": "Real-time transcription with Python SDK",
+      "language": "python",
+      "code": "from deepgram import DeepgramClient\n\ndeepclient = DeepgramClient()\n\ndg_connection = deepgram.transcription.live({\n    'model': 'nova',\n    'punctuate': True,\n    'interim_results': True,\n    'encoding': 'linear16',\n    'sample_rate': 16000\n})\n\ndef on_message(result):\n    print(f'Transcript: {result}')\n\ndg_connection.on('message', on_message)\ndg_connection.start()\n\n# Send audio data\ndg_connection.send(audio_data)"
+    },
+    "streaming_tts_javascript": {
+      "description": "Real-time TTS with Node.js WebSocket",
+      "language": "javascript",
+      "code": "const { createClient } = require('@deepgram/sdk');\nconst { Speaker } = require('speaker');\n\nconst speaker = new Speaker({\n  channels: 1,\n  bitDepth: 16,\n  sampleRate: 48000\n});\n\nconst deepgram = createClient(process.env.DEEPGRAM_API_KEY);\n\nconst dgConnection = deepgram.speak.live({\n  model: 'aura-2-thalia-en',\n  encoding: 'linear16',\n  sample_rate: 48000\n});\n\ndgConnection.on('open', () => {\n  console.log('Connection opened');\n  dgConnection.sendText('Hello, this is a text to speech example.');\n  dgConnection.flush();\n});\n\ndgConnection.on('audio', (data) => {\n  console.log('Received audio chunk');\n  speaker.write(Buffer.from(data));\n});\n\ndgConnection.on('close', () => {\n  console.log('Connection closed');\n});"
+    },
+    "streaming_tts_python": {
+      "description": "Real-time TTS with Python SDK and audio playback",
+      "language": "python",
+      "code": "import sounddevice as sd\nimport numpy as np\nfrom deepgram import DeepgramClient, SpeakWebSocketEvents, SpeakOptions\n\nTTS_TEXT = \"Hello, this is a text to speech example using Deepgram.\"\n\ndef main():\n    deepgram = DeepgramClient()\n    dg_connection = deepgram.speak.websocket.v(\"1\")\n\n    def on_open(self, open, **kwargs):\n        print(f\"Connection opened: {open}\")\n\n    def on_binary_data(self, data, **kwargs):\n        print(\"Received audio chunk\")\n        array = np.frombuffer(data, dtype=np.int16)\n        sd.play(array, 48000)\n        sd.wait()\n\n    def on_close(self, close, **kwargs):\n        print(f\"Connection closed: {close}\")\n\n    dg_connection.on(SpeakWebSocketEvents.Open, on_open)\n    dg_connection.on(SpeakWebSocketEvents.AudioData, on_binary_data)\n    dg_connection.on(SpeakWebSocketEvents.Close, on_close)\n\n    options = SpeakOptions(\n        model=\"aura-2-thalia-en\",\n        encoding=\"linear16\",\n        sample_rate=48000,\n    )\n\n    if dg_connection.start(options) is False:\n        print(\"Failed to start connection\")\n        return\n\n    dg_connection.send_text(TTS_TEXT)\n    dg_connection.flush()\n\n    time.sleep(5)\n    dg_connection.finish()\n\nif __name__ == \"__main__\":\n    main()"
+    },
+    "websocket_connection_raw": {
+      "description": "Raw WebSocket connection to Deepgram STT",
+      "language": "javascript",
+      "code": "const ws = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova&encoding=linear16&sample_rate=16000', {\n  headers: {\n    'Authorization': 'Token YOUR_DEEPGRAM_API_KEY'\n  }\n});\n\nws.onopen = () => {\n  console.log('Connection opened');\n};\n\nws.onmessage = (event) => {\n  const transcription = JSON.parse(event.data);\n  console.log('Transcription:', transcription);\n};\n\nws.onerror = (error) => {\n  console.error('WebSocket error:', error);\n};\n\nws.onclose = () => {\n  console.log('Connection closed');\n};"
+    },
+    "flux_connection": {
+      "description": "Connect to Flux conversational model",
+      "language": "javascript",
+      "code": "const ws = new WebSocket('wss://api.deepgram.com/v2/listen?model=flux-general-en&encoding=linear16&sample_rate=16000', {\n  headers: {\n    'Authorization': 'Token YOUR_DEEPGRAM_API_KEY'\n  }\n});\n\nws.onopen = () => {\n  console.log('Flux connection opened');\n};\n\nws.onmessage = (event) => {\n  const message = JSON.parse(event.data);\n  if (message.type === 'ListenV2TurnInfo') {\n    console.log('Turn info:', message);\n  }\n};"
+    }
+  },
+  "critical_notes": {
+    "for_realbuddy_project": {
+      "latency": "Sub-300ms latency achievable with streaming STT using Nova model",
+      "websocket_required": "Real-time transcription requires WebSocket connection",
+      "audio_format": "linear16 encoding recommended for real-time applications",
+      "sample_rate": "16000 Hz typical for microphone input, 48000 Hz for high-quality audio",
+      "interim_results": "Enable interim_results=true for continuous transcription updates",
+      "endpointing": "Configure endpointing for automatic detection of speech pauses",
+      "rate_limits": "Must verify concurrent connection limits for production use",
+      "pricing": "Must verify current pricing - varies by model and features",
+      "authentication": "Use Token authentication header for WebSocket connections"
+    }
+  }
+}
