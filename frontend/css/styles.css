@@ -1,0 +1,340 @@
+/* Custom styles for RealiBuddy */
+
+/* Scrollbar styling */
+#transcript-container::-webkit-scrollbar,
+#fact-checks-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#transcript-container::-webkit-scrollbar-track,
+#fact-checks-container::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 4px;
+}
+
+#transcript-container::-webkit-scrollbar-thumb,
+#fact-checks-container::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+#transcript-container::-webkit-scrollbar-thumb:hover,
+#fact-checks-container::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Transcript text styling */
+.transcript-line {
+    padding: 8px 0;
+    border-bottom: 1px solid #374151;
+}
+
+.transcript-line:last-child {
+    border-bottom: none;
+}
+
+.transcript-interim {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.transcript-final {
+    color: #e5e7eb;
+}
+
+.transcript-timestamp {
+    color: #6b7280;
+    font-size: 0.75rem;
+    margin-right: 8px;
+}
+
+/* Fact check card styling */
+.fact-card {
+    background: #1f2937;
+    border-radius: 8px;
+    padding: 16px;
+    border-left: 4px solid #6b7280;
+    transition: all 0.2s ease;
+}
+
+.fact-card:hover {
+    background: #283648;
+}
+
+.fact-card.verdict-true {
+    border-left-color: #10b981;
+}
+
+.fact-card.verdict-false {
+    border-left-color: #ef4444;
+}
+
+.fact-card.verdict-unverifiable {
+    border-left-color: #f59e0b;
+}
+
+.fact-claim {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: #e5e7eb;
+}
+
+.fact-verdict {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verdict-true {
+    background: #064e3b;
+    color: #6ee7b7;
+}
+
+.verdict-false {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+
+.verdict-unverifiable {
+    background: #78350f;
+    color: #fcd34d;
+}
+
+.fact-confidence {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-top: 8px;
+}
+
+.confidence-bar {
+    height: 4px;
+    background: #374151;
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-fill.high {
+    background: #10b981;
+}
+
+.confidence-fill.medium {
+    background: #f59e0b;
+}
+
+.confidence-fill.low {
+    background: #ef4444;
+}
+
+.fact-evidence {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #374151;
+    line-height: 1.5;
+}
+
+.fact-timestamp {
+    font-size: 0.65rem;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* Status indicator animations */
+@keyframes pulse-green {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes pulse-yellow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.status-connected {
+    background-color: #10b981 !important;
+    animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-connecting {
+    background-color: #f59e0b !important;
+    animation: pulse-yellow 1s ease-in-out infinite;
+}
+
+.status-error {
+    background-color: #ef4444 !important;
+}
+
+.status-idle {
+    background-color: #6b7280 !important;
+}
+
+/* Button active states */
+#toggle-monitoring-btn.monitoring {
+    background-color: #dc2626;
+}
+
+#toggle-monitoring-btn.monitoring:hover {
+    background-color: #b91c1c;
+}
+
+#emergency-stop-btn.activated {
+    background-color: #991b1b;
+    border: 2px solid #fca5a5;
+}
+
+/* Toast animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.toast-show {
+    display: block !important;
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast-hide {
+    animation: slideOut 0.3s ease-out;
+}
+
+/* Range slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #374151;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+/* Zap flash animation */
+@keyframes zap-flash {
+    0%, 100% {
+        background-color: #1f2937;
+    }
+    50% {
+        background-color: #7f1d1d;
+    }
+}
+
+.zap-flash {
+    animation: zap-flash 0.5s ease-in-out 3;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 2px solid #374151;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    #transcript-container,
+    #fact-checks-container {
+        height: 400px !important;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+button,
+input[type="range"],
+.fact-card {
+    transition-property: all;
+}

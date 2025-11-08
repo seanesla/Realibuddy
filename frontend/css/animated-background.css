@@ -1,0 +1,400 @@
+/* Advanced Animated Background */
+
+/* Canvas container for particle system */
+.animated-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+}
+
+/* Animated gradient mesh background */
+.gradient-mesh {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 90% 20%, rgba(37, 99, 235, 0.12) 0%, transparent 50%);
+    animation: mesh-rotate 40s linear infinite;
+    filter: blur(60px);
+}
+
+@keyframes mesh-rotate {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+/* Floating orbs */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.6;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0) 70%);
+    top: 10%;
+    left: 10%;
+    animation: float-1 25s infinite;
+}
+
+.orb-2 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0) 70%);
+    top: 60%;
+    right: 15%;
+    animation: float-2 30s infinite;
+}
+
+.orb-3 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, rgba(147, 51, 234, 0) 70%);
+    bottom: 20%;
+    left: 50%;
+    animation: float-3 35s infinite;
+}
+
+.orb-4 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0) 70%);
+    top: 40%;
+    left: 70%;
+    animation: float-4 28s infinite;
+}
+
+@keyframes float-1 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(100px, -80px) scale(1.1);
+    }
+    66% {
+        transform: translate(-50px, 100px) scale(0.9);
+    }
+}
+
+@keyframes float-2 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(-120px, 60px) scale(1.15);
+    }
+    66% {
+        transform: translate(80px, -90px) scale(0.95);
+    }
+}
+
+@keyframes float-3 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(90px, 70px) scale(1.08);
+    }
+    66% {
+        transform: translate(-110px, -60px) scale(0.92);
+    }
+}
+
+@keyframes float-4 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(-70px, -100px) scale(1.12);
+    }
+    66% {
+        transform: translate(130px, 80px) scale(0.88);
+    }
+}
+
+/* Particle grid */
+.particle-grid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-shift 20s linear infinite;
+    opacity: 0.3;
+}
+
+@keyframes grid-shift {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(50px, 50px);
+    }
+}
+
+/* Scanline effect */
+.scanlines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.05) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 3px
+    );
+    animation: scanlines-move 8s linear infinite;
+    pointer-events: none;
+    opacity: 0.1;
+}
+
+@keyframes scanlines-move {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(10px);
+    }
+}
+
+/* Glowing lines */
+.glow-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.glow-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.5) 50%,
+        transparent 100%);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+.glow-line-1 {
+    width: 600px;
+    top: 20%;
+    left: -600px;
+    animation: line-slide-1 15s infinite;
+}
+
+.glow-line-2 {
+    width: 500px;
+    top: 50%;
+    left: -500px;
+    animation: line-slide-2 18s infinite;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(168, 85, 247, 0.5) 50%,
+        transparent 100%);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.glow-line-3 {
+    width: 700px;
+    top: 75%;
+    left: -700px;
+    animation: line-slide-3 20s infinite;
+}
+
+@keyframes line-slide-1 {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(calc(100vw + 600px));
+    }
+}
+
+@keyframes line-slide-2 {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(calc(100vw + 500px));
+    }
+}
+
+@keyframes line-slide-3 {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(calc(100vw + 700px));
+    }
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    mix-blend-mode: overlay;
+}
+
+/* Vignette */
+.vignette {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        rgba(15, 23, 42, 0.4) 100%
+    );
+}
+
+/* Animated pulse rings */
+.pulse-rings {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.pulse-ring {
+    position: absolute;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50%;
+    animation: pulse-expand 6s ease-out infinite;
+}
+
+.pulse-ring-1 {
+    width: 200px;
+    height: 200px;
+    top: 30%;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.pulse-ring-2 {
+    width: 300px;
+    height: 300px;
+    top: 60%;
+    right: 25%;
+    animation-delay: 2s;
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.pulse-ring-3 {
+    width: 250px;
+    height: 250px;
+    bottom: 20%;
+    left: 60%;
+    animation-delay: 4s;
+    border-color: rgba(147, 51, 234, 0.3);
+}
+
+@keyframes pulse-expand {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Shooting stars */
+.shooting-stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.shooting-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    animation: shoot 3s ease-out infinite;
+}
+
+.shooting-star::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 1px;
+    background: linear-gradient(90deg, white, transparent);
+    transform: translateX(-100px);
+}
+
+.shooting-star-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shooting-star-2 {
+    top: 40%;
+    left: 50%;
+    animation-delay: 2s;
+}
+
+.shooting-star-3 {
+    top: 60%;
+    right: 20%;
+    animation-delay: 4s;
+}
+
+@keyframes shoot {
+    0% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(300px, 300px);
+        opacity: 0;
+    }
+}
+
+/* Performance optimization */
+@media (prefers-reduced-motion: reduce) {
+    .animated-bg-container * {
+        animation: none !important;
+    }
+}
