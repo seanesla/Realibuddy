@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws';
 import { DeepgramService } from '../services/deepgram.js';
-import { GeminiService } from '../services/gemini.js';
+import { PerplexityService } from '../services/perplexity.js';
 import { PavlokService } from '../services/pavlok.js';
 import { SafetyManager } from '../services/safety.js';
 import { BASE_ZAP_INTENSITY } from '../utils/config.js';
@@ -18,7 +18,7 @@ interface ServerMessage {
 
 export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyManager) {
     let deepgramService: DeepgramService | null = null;
-    const geminiService = new GeminiService();
+    const perplexityService = new PerplexityService();
     const pavlokService = new PavlokService();
     let currentBaseIntensity = BASE_ZAP_INTENSITY; // Default from config, can be updated by client
 
@@ -34,7 +34,7 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
             // Check if message is JSON or binary audio data
             if (data[0] === 0x7B) { // '{' - JSON message
                 const message: ClientMessage = JSON.parse(data.toString());
-                await handleTextMessage(ws, message, deepgramService, geminiService, pavlokService, safetyManager);
+                await handleTextMessage(ws, message, deepgramService, perplexityService, pavlokService, safetyManager);
             } else {
                 // Binary audio data
                 if (deepgramService) {
@@ -66,7 +66,7 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
         ws: WebSocket,
         message: ClientMessage,
         deepgramServiceRef: DeepgramService | null,
-        geminiService: GeminiService,
+        perplexityService: PerplexityService,
         pavlokService: PavlokService,
         safetyManager: SafetyManager
     ) {
@@ -103,7 +103,7 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     claim: text
                                 });
 
-                                const result = await geminiService.checkFact(text);
+                                const result = await perplexityService.checkFact(text);
 
                                 sendMessage(ws, {
                                     type: 'fact_check_result',

@@ -19,6 +19,7 @@ function getEnvVar(key: string): string {
 // API Keys
 export const DEEPGRAM_API_KEY = getEnvVar('DEEPGRAM_API_KEY');
 export const GEMINI_API_KEY = getEnvVar('GEMINI_API_KEY');
+export const PERPLEXITY_API_KEY = getEnvVar('PERPLEXITY_API_KEY');
 export const PAVLOK_API_TOKEN = getEnvVar('PAVLOK_API_TOKEN');
 
 // Server Configuration
