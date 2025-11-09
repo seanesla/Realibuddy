@@ -84,6 +84,16 @@ app.delete('/api/history/sessions/:id', (req, res) => {
     }
 });
 
+app.delete('/api/history/all', (req, res) => {
+    try {
+        db.clearAllData();
+        res.json({ success: true, message: 'All history data cleared' });
+    } catch (error) {
+        console.error('Error clearing all data:', error);
+        res.status(500).json({ error: 'Failed to clear all data' });
+    }
+});
+
 app.get('/api/history/export', (req, res) => {
     try {
         const format = (req.query.format as string) || 'json';

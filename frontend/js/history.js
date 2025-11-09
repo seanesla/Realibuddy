@@ -228,6 +228,28 @@ document.getElementById('export-json-btn').addEventListener('click', () => {
     window.location.href = `${API_BASE}/export?format=json`;
 });
 
+// Wipe all data functionality
+document.getElementById('wipe-all-btn').addEventListener('click', async () => {
+    if (confirm('Are you sure you want to delete ALL history data? This action cannot be undone!')) {
+        try {
+            const response = await fetch(`${API_BASE}/all`, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (result.success) {
+                // Reload both history and dashboard
+                loadHistorySessions();
+                loadDashboardData();
+            } else {
+                console.error('Error wiping data:', result.error);
+                alert('Failed to wipe data. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Error wiping data:', error);
+            alert('Failed to wipe data. Check console for details.');
+        }
+    }
+});
+
 // Utility function to get verdict color class
 function getVerdictColor(verdict) {
     switch (verdict) {
