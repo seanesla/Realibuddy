@@ -272,6 +272,10 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                     break;
                 }
 
+                // Create a new session for this text input fact-check
+                const textSessionId = db.createSession(Date.now());
+                console.log(`Text input session ${textSessionId} started`);
+
                 // Send transcript final message
                 sendMessage(ws, {
                     type: 'transcript_final',
@@ -297,6 +301,10 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                         sources: result.sources
                     });
 
+                    // Track zap status for database recording
+                    let wasZapped = false;
+                    let zapIntensity: number | null = null;
+
                     // Deliver BEEP if it's a lie (using beep for testing, not zap)
                     if (result.verdict === 'false' && safetyManager.canZap()) {
                         // Calculate intensity: Math.floor(baseIntensity * confidence)
@@ -306,6 +314,9 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
 
                         await pavlokService.sendBeep(intensity, `False claim: ${message.text}`);
                         safetyManager.recordZap(intensity, message.text);
+
+                        wasZapped = true;
+                        zapIntensity = intensity;
 
                         sendMessage(ws, {
                             type: 'zap_delivered',
@@ -319,8 +330,28 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                             canZap: safetyManager.canZap()
                         });
                     }
+
+                    // Record fact-check to database
+                    db.recordFactCheck(
+                        textSessionId,
+                        message.text,
+                        result.verdict.toUpperCase() as any,
+                        result.confidence,
+                        JSON.stringify(result.evidence),
+                        wasZapped,
+                        zapIntensity
+                    );
+
+                    // End the session
+                    db.endSession(textSessionId);
+                    console.log(`Text input session ${textSessionId} ended`);
                 } catch (error) {
                     console.error('Error during fact-checking:', error);
+
+                    // End the session even if there was an error
+                    db.endSession(textSessionId);
+                    console.log(`Text input session ${textSessionId} ended (with error)`);
+
                     sendMessage(ws, {
                         type: 'error',
                         message: `Fact-checking error: ${error instanceof Error ? error.message : 'Unknown error'}`

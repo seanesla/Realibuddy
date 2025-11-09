@@ -35,7 +35,6 @@ const elements = {
     // Control buttons
     toggleMonitoringBtn: document.getElementById('toggle-monitoring-btn'),
     stopTalkingBtn: document.getElementById('stop-talking-btn'),
-    emergencyStopBtn: document.getElementById('emergency-stop-btn'),
     clearTranscriptBtn: document.getElementById('clear-transcript-btn'),
     clearFactsBtn: document.getElementById('clear-facts-btn'),
     submitTextBtn: document.getElementById('submit-text-btn'),
@@ -109,9 +108,6 @@ function setupEventListeners() {
     elements.stopTalkingBtn.addEventListener('click', () => {
         wsClient.stopAudio();
     });
-
-    // Emergency stop button
-    elements.emergencyStopBtn.addEventListener('click', handleEmergencyStop);
 
     // Text input submit button
     elements.submitTextBtn.addEventListener('click', handleTextInputSubmit);
