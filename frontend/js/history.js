@@ -1,57 +1,14 @@
 // History and Dashboard Management
 const API_BASE = 'http://localhost:3001/api/history';
 
-// Listen for new fact-checks and refresh active tab
-document.addEventListener('factCheckComplete', (event) => {
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (!activeTab) return;
-
-    const activeTabName = activeTab.getAttribute('data-tab');
-
-    // Only refresh if Dashboard or History tab is active
-    if (activeTabName === 'dashboard') {
-        loadDashboardData();
-    } else if (activeTabName === 'history') {
-        loadHistorySessions();
-    }
-});
-
-// Tab switching
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tabName = btn.getAttribute('data-tab');
-        switchTab(tabName);
-    });
-});
-
-function switchTab(tabName) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.add('hidden');
-    });
-
-    // Show selected tab
-    const selectedTab = document.getElementById(`${tabName}-tab`);
-    if (selectedTab) {
-        selectedTab.classList.remove('hidden');
-    }
-
-    // Update button styles
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active', 'border-blue-500', 'text-blue-400');
-        btn.classList.add('border-gray-700', 'text-gray-400');
-    });
-
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active', 'border-blue-500', 'text-blue-400');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-gray-700', 'text-gray-400');
-
-    // Load data for specific tabs
+// Hook into app.js tab switching - called when tabs are switched
+window.onTabSwitch = function(tabName) {
     if (tabName === 'dashboard') {
         loadDashboardData();
     } else if (tabName === 'history') {
         loadHistorySessions();
     }
-}
+};
 
 // Load dashboard statistics
 async function loadDashboardData() {

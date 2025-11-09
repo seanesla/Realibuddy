@@ -135,6 +135,46 @@ function setupEventListeners() {
         wsClient.setAutoReconnect(e.target.checked);
         saveSettings();
     });
+
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.dataset.tab;
+            switchTab(tabName);
+        });
+    });
+}
+
+/**
+ * Switch between tabs
+ */
+function switchTab(tabName) {
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+
+    // Add active class to clicked tab button
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+
+    // Show corresponding tab content
+    const activeContent = document.getElementById(`${tabName}-tab`);
+    if (activeContent) {
+        activeContent.classList.remove('hidden');
+    }
+
+    // Notify history.js to load data
+    if (window.onTabSwitch) {
+        window.onTabSwitch(tabName);
+    }
 }
 
 /**

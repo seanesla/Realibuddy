@@ -184,6 +184,7 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
 
                                 // Store fact-check in database
                                 if (currentSessionId !== null) {
+                                    console.log(`Recording fact-check to database: sessionId=${currentSessionId}, verdict=${result.verdict}, confidence=${result.confidence}`);
                                     db.recordFactCheck(
                                         currentSessionId,
                                         text,
@@ -193,9 +194,25 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                         wasZapped,
                                         zapIntensity
                                     );
+                                    console.log(`Fact-check recorded successfully`);
+
+                                    // End session after recording fact-check
+                                    db.endSession(currentSessionId);
+                                    console.log(`Session ${currentSessionId} ended after fact-check`);
+                                    currentSessionId = null;
+                                } else {
+                                    console.error('ERROR: currentSessionId is null, cannot record fact-check!');
                                 }
                             } catch (error) {
                                 console.error('Error during fact-checking:', error);
+
+                                // End session even if there was an error
+                                if (currentSessionId !== null) {
+                                    db.endSession(currentSessionId);
+                                    console.log(`Session ${currentSessionId} ended after error`);
+                                    currentSessionId = null;
+                                }
+
                                 sendMessage(ws, {
                                     type: 'error',
                                     message: `Fact-checking error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -217,12 +234,10 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                     deepgramService.close();
                     deepgramService = null;
                 }
-                // End active session
-                if (currentSessionId !== null) {
-                    db.endSession(currentSessionId);
-                    console.log(`Session ${currentSessionId} ended`);
-                    currentSessionId = null;
-                }
+                // Don't end session here - let it end after fact-checks complete
+                // Sessions will be ended when:
+                // 1. Fact-checks complete in the final transcript callback
+                // 2. WebSocket closes
                 sendMessage(ws, {
                     type: 'success',
                     message: 'Monitoring stopped'
