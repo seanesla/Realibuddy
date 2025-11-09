@@ -1,10 +1,17 @@
 import Perplexity from '@perplexity-ai/perplexity_ai';
 import { PERPLEXITY_API_KEY } from '../utils/config.js';
+import { getDomainsForFilter, SourceFilterType } from '../utils/sourceDomains.js';
 
 interface FactCheckResult {
     verdict: 'true' | 'false' | 'unverifiable';
     confidence: number;
     evidence: string;
+    citations?: string[];
+    sources?: Array<{
+        title: string;
+        url: string;
+        date?: string;
+    }>;
 }
 
 export class PerplexityService {
@@ -16,8 +23,11 @@ export class PerplexityService {
         });
     }
 
-    async checkFact(claim: string): Promise<FactCheckResult> {
+    async checkFact(claim: string, sourceFilter: SourceFilterType = 'all'): Promise<FactCheckResult> {
         try {
+            // Get domain filter if specified
+            const searchDomainFilter = getDomainsForFilter(sourceFilter);
+
             // Get current date/time for context
             const now = new Date();
             const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -99,6 +109,36 @@ REMEMBER:
                 required: ["verdict", "confidence", "evidence"]
             };
 
+            // Build API request with optional domain filter
+            const apiRequest: any = {
+                model: "sonar-pro",
+                messages: [
+                    {
+                        role: "system",
+                        content: systemPrompt
+                    },
+                    {
+                        role: "user",
+                        content: `Statement to verify: "${claim}"`
+                    }
+                ],
+                response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                        schema: responseSchema
+                    }
+                }
+            };
+
+            // Add search_domain_filter if specified (max 20 domains)
+            if (searchDomainFilter && searchDomainFilter.length > 0) {
+                apiRequest.search_domain_filter = searchDomainFilter.slice(0, 20);
+                console.log(`Using source filter: ${sourceFilter} (${apiRequest.search_domain_filter.length} domains)`);
+                console.log('Domains being used:', apiRequest.search_domain_filter);
+            } else {
+                console.log('No source filter applied (using all sources)');
+            }
+
             // Create timeout promise that rejects after 30 seconds
             const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('Perplexity API timeout after 30 seconds')), 30000)
@@ -106,43 +146,29 @@ REMEMBER:
 
             // Race the API call against the timeout
             const response = await Promise.race([
-                this.client.chat.completions.create({
-                    model: "sonar-pro",
-                    messages: [
-                        {
-                            role: "system",
-                            content: systemPrompt
-                        },
-                        {
-                            role: "user",
-                            content: `Statement to verify: "${claim}"`
-                        }
-                    ],
-                    response_format: {
-                        type: "json_schema",
-                        json_schema: {
-                            schema: responseSchema
-                        }
-                    }
-                }),
+                this.client.chat.completions.create(apiRequest),
                 timeoutPromise
             ]);
 
             const responseText = response.choices[0].message.content;
             console.log('Perplexity response:', responseText);
 
-            // Log citations if available
+            // Capture citations if available
+            let citations: string[] = [];
             if ('citations' in response && Array.isArray(response.citations)) {
-                console.log('Citations:', response.citations);
+                citations = response.citations;
+                console.log('Citations:', citations);
             }
 
-            // Log search results if available
+            // Capture search results if available
+            let sources: Array<{ title: string; url: string; date?: string }> = [];
             if ('search_results' in response && Array.isArray(response.search_results)) {
-                console.log('Search results:', response.search_results.slice(0, 3).map((r: any) => ({
-                    title: r.title,
-                    url: r.url,
+                sources = response.search_results.slice(0, 5).map((r: any) => ({
+                    title: r.title || 'Untitled',
+                    url: r.url || '',
                     date: r.date
-                })));
+                }));
+                console.log('Search results:', sources);
             }
 
             // Log usage/cost info if available
@@ -172,6 +198,14 @@ REMEMBER:
 
             // Clamp confidence between 0 and 1
             result.confidence = Math.max(0, Math.min(1, result.confidence));
+
+            // Add citations and sources to result
+            if (citations.length > 0) {
+                result.citations = citations;
+            }
+            if (sources.length > 0) {
+                result.sources = sources;
+            }
 
             return result;
 

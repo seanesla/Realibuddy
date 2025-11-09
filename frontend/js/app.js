@@ -38,6 +38,9 @@ const elements = {
     emergencyStopBtn: document.getElementById('emergency-stop-btn'),
     clearTranscriptBtn: document.getElementById('clear-transcript-btn'),
     clearFactsBtn: document.getElementById('clear-facts-btn'),
+    submitTextBtn: document.getElementById('submit-text-btn'),
+    textInput: document.getElementById('text-input'),
+    sourceFilter: document.getElementById('source-filter'),
 
     // Statistics
     zapCount: document.getElementById('zap-count'),
@@ -89,6 +92,9 @@ async function initialize() {
     // Start UI update loops
     startUIUpdates();
 
+    // Auto-connect to WebSocket server
+    autoConnect();
+
     console.log('RealiBuddy initialized');
 }
 
@@ -106,6 +112,17 @@ function setupEventListeners() {
 
     // Emergency stop button
     elements.emergencyStopBtn.addEventListener('click', handleEmergencyStop);
+
+    // Text input submit button
+    elements.submitTextBtn.addEventListener('click', handleTextInputSubmit);
+
+    // Allow Enter key to submit text (Ctrl+Enter for newline)
+    elements.textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+            e.preventDefault();
+            handleTextInputSubmit();
+        }
+    });
 
     // Clear buttons
     elements.clearTranscriptBtn.addEventListener('click', clearTranscript);
@@ -302,12 +319,103 @@ function handleEmergencyStop() {
     appState.emergencyStopActive = true;
 
     // Update UI
-    elements.emergencyStopBtn.textContent = 'EMERGENCY STOP ACTIVE';
-    elements.emergencyStopBtn.classList.add('activated');
-    elements.emergencyStopBtn.disabled = true;
     elements.toggleMonitoringBtn.disabled = true;
 
     showError('EMERGENCY STOP ACTIVATED - All zaps disabled. Refresh page to reset.');
+}
+
+/**
+ * Auto-connect to WebSocket server on page load
+ */
+async function autoConnect() {
+    if (wsClient.isConnected()) {
+        console.log('Already connected');
+        return;
+    }
+
+    try {
+        console.log('Auto-connecting to WebSocket server...');
+
+        // Get WebSocket URL from settings
+        const wsUrl = elements.websocketUrl.value || 'ws://localhost:3001';
+
+        // Connect to WebSocket
+        wsClient.connect(wsUrl);
+
+        // Wait for connection with timeout
+        await waitForConnection();
+
+        console.log('Auto-connected successfully');
+        showSuccess('Connected to server');
+
+    } catch (error) {
+        console.error('Auto-connection failed:', error);
+        console.log('You can try refreshing the page or check if backend is running');
+        // Don't show error toast on auto-connect failure - just log it
+    }
+}
+
+/**
+ * Handle text input submission for fact-checking
+ */
+async function handleTextInputSubmit() {
+    const text = elements.textInput.value.trim();
+
+    // Validation
+    if (!text) {
+        showError('Please enter a statement to fact-check');
+        return;
+    }
+
+    if (text.length > 1000) {
+        showError('Statement too long (max 1000 characters)');
+        return;
+    }
+
+    if (!wsClient.isConnected()) {
+        showError('Not connected to server. Please wait for connection.');
+        return;
+    }
+
+    if (appState.emergencyStopActive) {
+        showError('Emergency stop is active. Refresh page to reset.');
+        return;
+    }
+
+    try {
+        // Disable button during processing
+        elements.submitTextBtn.disabled = true;
+        elements.submitTextBtn.textContent = 'Checking...';
+
+        // Trigger fact-checking
+        const timestamp = Date.now();
+
+        // Show fact-check started
+        showSuccess('Fact-checking statement...');
+
+        // Get selected source filter
+        const sourceFilter = elements.sourceFilter.value || 'all';
+
+        // Send text input message to backend for fact-checking
+        wsClient.send({
+            type: 'text_input',
+            text: text,
+            timestamp: timestamp,
+            baseIntensity: appState.baseIntensity,
+            sourceFilter: sourceFilter
+        });
+
+        // Clear input
+        elements.textInput.value = '';
+
+    } catch (error) {
+        console.error('Error submitting text:', error);
+        showError(`Failed to submit: ${error.message}`);
+    } finally {
+        // Re-enable button
+        elements.submitTextBtn.disabled = false;
+        elements.submitTextBtn.textContent = 'Check This Statement';
+    }
 }
 
 /**
@@ -474,6 +582,24 @@ function displayFactCheck(data) {
 
     const time = new Date().toLocaleTimeString();
 
+    // Build sources HTML if available
+    let sourcesHtml = '';
+    if (data.sources && data.sources.length > 0) {
+        sourcesHtml = '<div class="fact-sources"><div class="sources-header">Sources used:</div><div class="sources-list">';
+        data.sources.forEach((source, index) => {
+            const displayDate = source.date ? ` (${source.date})` : '';
+            sourcesHtml += `
+                <div class="source-item">
+                    <span class="source-number">${index + 1}.</span>
+                    <a href="${source.url}" target="_blank" rel="noopener noreferrer" class="source-link">
+                        ${escapeHtml(source.title)}${displayDate}
+                    </a>
+                </div>
+            `;
+        });
+        sourcesHtml += '</div></div>';
+    }
+
     card.innerHTML = `
         <div class="fact-claim">${escapeHtml(data.claim)}</div>
         <div class="flex items-center justify-between mb-2">
@@ -484,6 +610,7 @@ function displayFactCheck(data) {
             <div class="confidence-fill ${confidenceClass}" style="width: ${confidence}%"></div>
         </div>
         ${data.evidence ? `<div class="fact-evidence">${escapeHtml(data.evidence)}</div>` : ''}
+        ${sourcesHtml}
         <div class="fact-timestamp">${time}</div>
     `;
 

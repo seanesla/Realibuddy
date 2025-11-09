@@ -8,9 +8,12 @@ import DeepgramTTSService from '../services/deepgram-tts.js';
 import { BASE_ZAP_INTENSITY } from '../utils/config.js';
 
 interface ClientMessage {
-    type: 'audio_chunk' | 'start_monitoring' | 'stop_monitoring' | 'emergency_stop';
+    type: 'audio_chunk' | 'start_monitoring' | 'stop_monitoring' | 'emergency_stop' | 'text_input';
     data?: ArrayBuffer;
     baseIntensity?: number;
+    text?: string;
+    timestamp?: number;
+    sourceFilter?: 'all' | 'authoritative' | 'news' | 'social' | 'academic';
 }
 
 interface ServerMessage {
@@ -117,14 +120,17 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                                     claim: text
                                 });
 
-                                const result = await perplexityService.checkFact(text);
+                                // Use sourceFilter if provided (for voice monitoring, we'll use 'all' by default)
+                                const result = await perplexityService.checkFact(text, 'all');
 
                                 sendMessage(ws, {
                                     type: 'fact_check_result',
                                     claim: text,
                                     verdict: result.verdict,
                                     confidence: result.confidence,
-                                    evidence: result.evidence
+                                    evidence: result.evidence,
+                                    citations: result.citations,
+                                    sources: result.sources
                                 });
 
                                 // Generate TTS for verdict + description
@@ -234,6 +240,92 @@ export function handleWebSocketConnection(ws: WebSocket, safetyManager: SafetyMa
                     zapCount: safetyManager.getZapCount(),
                     canZap: false
                 });
+                break;
+
+            case 'text_input':
+                // Handle text input for fact-checking (without microphone/Deepgram)
+                if (!message.text) {
+                    sendMessage(ws, {
+                        type: 'error',
+                        message: 'No text provided'
+                    });
+                    break;
+                }
+
+                // Validate text length (prevent abuse)
+                if (message.text.length > 1000) {
+                    sendMessage(ws, {
+                        type: 'error',
+                        message: 'Text too long (max 1000 characters)'
+                    });
+                    break;
+                }
+
+                // Validate sourceFilter (security)
+                const validFilters = ['all', 'authoritative', 'news', 'social', 'academic'];
+                const sourceFilter = message.sourceFilter || 'all';
+                if (!validFilters.includes(sourceFilter)) {
+                    sendMessage(ws, {
+                        type: 'error',
+                        message: `Invalid source filter: ${sourceFilter}`
+                    });
+                    break;
+                }
+
+                // Send transcript final message
+                sendMessage(ws, {
+                    type: 'transcript_final',
+                    text: message.text,
+                    timestamp: message.timestamp || Date.now()
+                });
+
+                // Start fact-checking
+                try {
+                    sendMessage(ws, {
+                        type: 'fact_check_started',
+                        claim: message.text
+                    });
+                    const result = await perplexityService.checkFact(message.text, sourceFilter);
+
+                    sendMessage(ws, {
+                        type: 'fact_check_result',
+                        claim: message.text,
+                        verdict: result.verdict,
+                        confidence: result.confidence,
+                        evidence: result.evidence,
+                        citations: result.citations,
+                        sources: result.sources
+                    });
+
+                    // Deliver BEEP if it's a lie (using beep for testing, not zap)
+                    if (result.verdict === 'false' && safetyManager.canZap()) {
+                        // Calculate intensity: Math.floor(baseIntensity * confidence)
+                        // SAFETY CAP: Never exceed 100
+                        const calculatedIntensity = Math.floor(currentBaseIntensity * result.confidence);
+                        const intensity = Math.min(Math.max(1, calculatedIntensity), 100);
+
+                        await pavlokService.sendBeep(intensity, `False claim: ${message.text}`);
+                        safetyManager.recordZap(intensity, message.text);
+
+                        sendMessage(ws, {
+                            type: 'zap_delivered',
+                            intensity,
+                            reason: `False claim detected (${Math.round(result.confidence * 100)}% confidence)`
+                        });
+
+                        sendMessage(ws, {
+                            type: 'safety_status',
+                            zapCount: safetyManager.getZapCount(),
+                            canZap: safetyManager.canZap()
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error during fact-checking:', error);
+                    sendMessage(ws, {
+                        type: 'error',
+                        message: `Fact-checking error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    });
+                }
                 break;
 
             default:
