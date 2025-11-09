@@ -5,438 +5,327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RealiBuddy - Real-time Lie Detector</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="bg-slate-950 text-gray-100 min-h-screen antialiased">
+
+    <!-- Particle Background -->
+    <div id="particles-bg" class="fixed inset-0 z-0"></div>
 
     <!-- Main Container -->
-    <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <div class="px-6 py-6 relative z-10">
 
         <!-- Header -->
-        <header class="mb-8 flex items-center space-x-4">
-            <img src="assets/logo.svg" alt="RealiBuddy Logo" class="h-16 w-16">
-            <div>
-                <h1 class="text-4xl font-bold text-white mb-2">RealiBuddy</h1>
-                <p class="text-gray-400">Real-time fact-checking with accountability</p>
+        <header class="mb-8">
+            <div class="flex items-center space-x-3">
+                <img src="assets/logo.svg" alt="RealiBuddy Logo" class="w-48 h-auto">
             </div>
         </header>
 
         <!-- Status Bar -->
-        <div class="bg-gray-800 rounded-lg p-4 mb-6 shadow-lg">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Microphone Status -->
+        <div class="glass-panel rounded-xl p-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="flex items-center space-x-3">
-                    <div id="mic-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <div id="mic-indicator" class="status-dot"></div>
                     <div>
-                        <div class="text-xs text-gray-400">Microphone</div>
-                        <div id="mic-status" class="text-sm font-medium">Not Connected</div>
+                        <div class="text-xs text-gray-400 font-medium">Microphone</div>
+                        <div id="mic-status" class="text-sm font-semibold">Not Connected</div>
                     </div>
                 </div>
-
-                <!-- WebSocket Status -->
                 <div class="flex items-center space-x-3">
-                    <div id="ws-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <div id="ws-indicator" class="status-dot"></div>
                     <div>
-                        <div class="text-xs text-gray-400">Connection</div>
-                        <div id="ws-status" class="text-sm font-medium">Disconnected</div>
+                        <div class="text-xs text-gray-400 font-medium">Connection</div>
+                        <div id="ws-status" class="text-sm font-semibold">Disconnected</div>
                     </div>
                 </div>
-
-                <!-- Deepgram Status -->
                 <div class="flex items-center space-x-3">
-                    <div id="deepgram-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <div id="deepgram-indicator" class="status-dot"></div>
                     <div>
-                        <div class="text-xs text-gray-400">Speech-to-Text</div>
-                        <div id="deepgram-status" class="text-sm font-medium">Idle</div>
+                        <div class="text-xs text-gray-400 font-medium">Speech-to-Text</div>
+                        <div id="deepgram-status" class="text-sm font-semibold">Idle</div>
                     </div>
                 </div>
-
-                <!-- Gemini Status -->
                 <div class="flex items-center space-x-3">
-                    <div id="gemini-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <div id="gemini-indicator" class="status-dot"></div>
                     <div>
-                        <div class="text-xs text-gray-400">Fact Checking</div>
-                        <div id="gemini-status" class="text-sm font-medium">Idle</div>
+                        <div class="text-xs text-gray-400 font-medium">Fact Checking</div>
+                        <div id="gemini-status" class="text-sm font-semibold">Idle</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Tab Navigation -->
-        <div class="flex space-x-4 mb-6 border-b border-gray-700">
-            <button class="tab-btn active px-4 py-2 font-bold border-b-2 border-blue-500 text-blue-400 transition-colors" data-tab="main">
-                Main
-            </button>
-            <button class="tab-btn px-4 py-2 font-bold border-b-2 border-gray-700 text-gray-400 hover:text-gray-300 transition-colors" data-tab="dashboard">
-                Dashboard
-            </button>
-            <button class="tab-btn px-4 py-2 font-bold border-b-2 border-gray-700 text-gray-400 hover:text-gray-300 transition-colors" data-tab="history">
-                History
-            </button>
+        <div class="flex space-x-1 mb-6 glass-panel rounded-xl p-1">
+            <button class="tab-btn active" data-tab="main">Main</button>
+            <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="history">History</button>
         </div>
 
-        <!-- Main Tab Content -->
+        <!-- Main Tab -->
         <div id="main-tab" class="tab-content">
-            <!-- Main Content Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                <!-- Left Column: Controls & Stats -->
-                <div class="lg:col-span-1 space-y-6">
+                <!-- Controls Column -->
+                <div class="lg:col-span-3 space-y-6">
 
-                <!-- Control Panel -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Controls</h2>
+                    <!-- Control Panel -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <h2 class="text-lg font-bold mb-4">Controls</h2>
 
-                    <!-- Start/Stop Button -->
-                    <button id="toggle-monitoring-btn"
-                            class="w-full py-4 px-6 rounded-lg font-bold text-lg mb-4 transition-colors duration-200 bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-600 disabled:cursor-not-allowed">
-                        Start Monitoring
-                    </button>
-
-                    <!-- Stop Talking Button -->
-                    <button id="stop-talking-btn"
-                            class="w-full py-3 px-6 rounded-lg font-bold text-md mb-4 bg-yellow-600 hover:bg-yellow-700 text-white transition-colors duration-200">
-                        STOP TALKING
-                    </button>
-
-                    <!-- Emergency Stop Button -->
-                    <button id="emergency-stop-btn"
-                            class="w-full py-4 px-6 rounded-lg font-bold text-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200">
-                        EMERGENCY STOP
-                    </button>
-
-                    <div class="mt-4 text-xs text-gray-400 text-center">
-                        Emergency stop disables all zaps for this session
-                    </div>
-                </div>
-
-                <!-- Text Input Panel -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Text Input Mode</h2>
-
-                    <p class="text-sm text-gray-400 mb-4">
-                        Type a statement to fact-check without using microphone
-                    </p>
-
-                    <div class="space-y-3">
-                        <!-- Source Type Filter -->
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">
-                                Source Filter
-                            </label>
-                            <select
-                                id="source-filter"
-                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-blue-500">
-                                <option value="all">All Sources</option>
-                                <option value="authoritative">Authoritative (Wikipedia, .edu, .gov)</option>
-                                <option value="news">News & Media</option>
-                                <option value="social">Social Media (Reddit, X)</option>
-                                <option value="academic">Academic (.edu, journals)</option>
-                            </select>
-                            <div class="text-xs text-gray-500 mt-1">
-                                Choose which types of sources to use for fact-checking
-                            </div>
-                        </div>
-
-                        <textarea
-                            id="text-input"
-                            rows="3"
-                            placeholder="Type a statement to fact-check (e.g., 'The Earth is flat')"
-                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-blue-500 resize-none"></textarea>
-
-                        <button
-                            id="submit-text-btn"
-                            class="w-full py-3 px-4 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed">
-                            Check This Statement
+                        <button id="toggle-monitoring-btn" class="btn-primary w-full mb-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            </svg>
+                            <span>Start Monitoring</span>
                         </button>
-                    </div>
 
-                    <div class="mt-3 text-xs text-gray-400">
-                        Will auto-connect when page loads. Watch connection indicator above.
-                    </div>
-                </div>
-
-                <!-- Zap Statistics -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Session Statistics</h2>
-
-                    <div class="space-y-4">
-                        <!-- Zap Counter -->
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-gray-400 text-sm">Zaps Delivered</span>
-                                <span id="zap-count" class="text-2xl font-bold text-red-400">0</span>
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                Max: 10 per hour
-                            </div>
-                        </div>
-
-                        <!-- Cooldown Timer -->
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-gray-400 text-sm">Cooldown</span>
-                                <span id="cooldown-timer" class="text-sm font-mono text-gray-300">Ready</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-2">
-                                <div id="cooldown-bar" class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 100%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Last Zap -->
-                        <div>
-                            <div class="text-gray-400 text-sm mb-1">Last Zap</div>
-                            <div id="last-zap-time" class="text-sm text-gray-300">Never</div>
-                            <div id="last-zap-reason" class="text-xs text-gray-500 mt-1 italic">-</div>
-                        </div>
-
-                        <!-- Claims Checked -->
-                        <div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400 text-sm">Claims Checked</span>
-                                <span id="claims-checked" class="text-xl font-bold text-blue-400">0</span>
-                            </div>
-                        </div>
-
-                        <!-- Accuracy -->
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-gray-400 text-sm">Truth Rate</span>
-                                <span id="accuracy-percentage" class="text-xl font-bold text-green-400">-</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-2">
-                                <div id="accuracy-bar" class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Settings Panel -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Settings</h2>
-
-                    <!-- Base Intensity -->
-                    <div class="mb-4">
-                        <label class="block text-sm text-gray-400 mb-2">
-                            Base Zap Intensity
-                        </label>
-                        <input type="range"
-                               id="base-intensity-slider"
-                               min="10"
-                               max="80"
-                               value="30"
-                               class="w-full">
-                        <div class="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>10</span>
-                            <span id="base-intensity-value" class="font-bold text-gray-300">30</span>
-                            <span>80</span>
-                        </div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            Final intensity = Base × Confidence
-                        </div>
-                    </div>
-
-                    <!-- WebSocket Server -->
-                    <div class="mb-4">
-                        <label class="block text-sm text-gray-400 mb-2">
-                            WebSocket Server
-                        </label>
-                        <input type="text"
-                               id="websocket-url"
-                               value="ws://localhost:3001"
-                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-blue-500">
-                    </div>
-
-                    <!-- Auto-reconnect -->
-                    <div class="flex items-center justify-between">
-                        <label class="text-sm text-gray-400">Auto-reconnect</label>
-                        <input type="checkbox"
-                               id="auto-reconnect"
-                               checked
-                               class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Middle Column: Transcript -->
-            <div class="lg:col-span-1 space-y-6">
-
-                <!-- Live Transcription -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg flex flex-col h-[calc(100vh-200px)]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold">Live Transcript</h2>
-                        <button id="clear-transcript-btn"
-                                class="text-sm text-gray-400 hover:text-gray-200 transition-colors">
-                            Clear
+                        <button id="stop-talking-btn" class="btn-warning w-full mb-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                            </svg>
+                            <span>Stop Talking</span>
                         </button>
-                    </div>
 
-                    <!-- Transcript Display -->
-                    <div id="transcript-container"
-                         class="flex-1 overflow-y-auto bg-gray-900 rounded p-4 font-mono text-sm leading-relaxed">
-                        <div class="text-gray-500 italic">
-                            Transcript will appear here...
+                        <button id="emergency-stop-btn" class="btn-danger w-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>Emergency Stop</span>
+                        </button>
+
+                        <div class="mt-3 text-xs text-gray-400 text-center">
+                            Emergency stop disables all zaps
                         </div>
                     </div>
 
-                    <!-- Transcript Stats -->
-                    <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between text-xs text-gray-500">
-                        <span>Words: <span id="word-count" class="text-gray-300">0</span></span>
-                        <span>Duration: <span id="session-duration" class="text-gray-300">00:00</span></span>
+                    <!-- Text Input -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <h2 class="text-lg font-bold mb-4">Text Input Mode</h2>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Source Filter</label>
+                                <select id="source-filter" class="input-field">
+                                    <option value="all">All Sources</option>
+                                    <option value="authoritative">Authoritative</option>
+                                    <option value="news">News & Media</option>
+                                    <option value="social">Social Media</option>
+                                    <option value="academic">Academic</option>
+                                </select>
+                            </div>
+
+                            <textarea
+                                id="text-input"
+                                rows="3"
+                                placeholder="Enter statement to fact-check"
+                                class="input-field resize-none"></textarea>
+
+                            <button id="submit-text-btn" class="btn-secondary w-full">
+                                Check Statement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <h2 class="text-lg font-bold mb-4">Statistics</h2>
+
+                        <div class="space-y-4">
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-400">Total Zaps</div>
+                                <div id="zap-count" class="text-3xl font-bold text-red-400">0</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-400 mb-1">Cooldown</div>
+                                <div id="cooldown-timer" class="text-lg font-semibold mb-2">Ready</div>
+                                <div class="progress-bar">
+                                    <div id="cooldown-bar" class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-400">Last Zap</div>
+                                <div id="last-zap-time" class="text-sm font-medium">Never</div>
+                                <div id="last-zap-reason" class="text-xs text-gray-500 mt-1">—</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-400">Claims Checked</div>
+                                <div id="claims-checked" class="text-2xl font-bold">0</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-400 mb-1">Truth Rate</div>
+                                <div id="accuracy-percentage" class="text-2xl font-bold mb-2">—</div>
+                                <div class="progress-bar">
+                                    <div id="accuracy-bar" class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="stat-card-sm">
+                                    <div class="text-xs text-gray-400">Words</div>
+                                    <div id="word-count" class="text-xl font-bold">0</div>
+                                </div>
+                                <div class="stat-card-sm">
+                                    <div class="text-xs text-gray-400">Duration</div>
+                                    <div id="session-duration" class="text-xl font-bold">00:00</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Column: Fact Checks -->
-            <div class="lg:col-span-1 space-y-6">
+                <!-- Content Columns -->
+                <div class="lg:col-span-9 space-y-6">
 
-                <!-- Fact Check Results -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg flex flex-col h-[calc(100vh-200px)]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold">Fact Checks</h2>
-                        <button id="clear-facts-btn"
-                                class="text-sm text-gray-400 hover:text-gray-200 transition-colors">
-                            Clear
-                        </button>
-                    </div>
-
-                    <!-- Fact Check Cards Container -->
-                    <div id="fact-checks-container"
-                         class="flex-1 overflow-y-auto space-y-3">
-                        <div class="text-gray-500 italic text-sm">
-                            Fact-check results will appear here...
+                    <!-- Transcript -->
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <div class="border-b border-white/10 p-4 flex items-center justify-between">
+                            <h2 class="text-lg font-bold">Live Transcript</h2>
+                            <button id="clear-transcript-btn" class="btn-ghost text-sm">Clear</button>
+                        </div>
+                        <div id="transcript-container" class="p-4 h-96 overflow-y-auto">
+                            <div class="text-gray-500 text-sm text-center py-20">
+                                <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                                Start monitoring to see transcription
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Fact Checks -->
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <div class="border-b border-white/10 p-4 flex items-center justify-between">
+                            <h2 class="text-lg font-bold">Fact Checks</h2>
+                            <button id="clear-facts-btn" class="btn-ghost text-sm">Clear</button>
+                        </div>
+                        <div id="fact-checks-container" class="p-4 h-96 overflow-y-auto">
+                            <div class="text-gray-500 text-sm text-center py-20">
+                                <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Fact checks will appear here
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-        </div> <!-- End Main Tab -->
 
-        <!-- Dashboard Tab Content -->
+        <!-- Dashboard Tab -->
         <div id="dashboard-tab" class="tab-content hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <!-- Total Zaps -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <div class="text-gray-400 text-sm mb-2">Total Zaps</div>
-                    <div id="dash-total-zaps" class="text-3xl font-bold text-red-400">0</div>
-                </div>
-
-                <!-- Total Claims -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <div class="text-gray-400 text-sm mb-2">Total Claims Checked</div>
-                    <div id="dash-total-claims" class="text-3xl font-bold text-blue-400">0</div>
-                </div>
-
-                <!-- Truth Rate -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <div class="text-gray-400 text-sm mb-2">Overall Truth Rate</div>
-                    <div id="dash-truth-rate" class="text-3xl font-bold text-green-400">0%</div>
-                </div>
-
-                <!-- False Rate -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <div class="text-gray-400 text-sm mb-2">False Rate</div>
-                    <div id="dash-false-rate" class="text-3xl font-bold text-red-400">0%</div>
-                </div>
-            </div>
-
-            <!-- Charts and Recent Claims -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Statistics Chart -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Claim Verdicts Distribution</h2>
-                    <div class="space-y-3">
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-400">True</span>
-                                <span id="dash-true-count" class="text-green-400 font-bold">0</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded h-2">
-                                <div id="dash-true-bar" class="bg-green-500 h-2 rounded" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-400">False</span>
-                                <span id="dash-false-count" class="text-red-400 font-bold">0</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded h-2">
-                                <div id="dash-false-bar" class="bg-red-500 h-2 rounded" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-400">Unverifiable</span>
-                                <span id="dash-unverif-count" class="text-yellow-400 font-bold">0</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded h-2">
-                                <div id="dash-unverif-bar" class="bg-yellow-500 h-2 rounded" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Claims -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-lg max-h-80 overflow-y-auto">
-                    <h2 class="text-xl font-bold mb-4">Recent Claims</h2>
-                    <div id="recent-claims-list" class="space-y-3 text-sm">
-                        <div class="text-gray-500 italic">No claims yet</div>
-                    </div>
-                </div>
+            <div class="glass-panel rounded-xl p-8">
+                <h2 class="text-2xl font-bold mb-4">Dashboard</h2>
+                <p class="text-gray-400">Dashboard features coming soon...</p>
             </div>
         </div>
 
-        <!-- History Tab Content -->
+        <!-- History Tab -->
         <div id="history-tab" class="tab-content hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Session History</h2>
-                <div class="space-x-2">
-                    <button id="export-csv-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium">
-                        Export CSV
-                    </button>
-                    <button id="export-json-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium">
-                        Export JSON
-                    </button>
+            <div class="glass-panel rounded-xl p-8">
+                <h2 class="text-2xl font-bold mb-4">History</h2>
+                <p class="text-gray-400">History features coming soon...</p>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="mt-6 glass-panel rounded-xl p-6">
+            <h2 class="text-lg font-bold mb-4">Settings</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Base Zap Intensity</label>
+                    <input type="range" id="base-intensity-slider" min="10" max="80" value="30" class="w-full">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>10</span>
+                        <span id="base-intensity-value" class="font-bold text-gray-300">30</span>
+                        <span>80</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">Final = Base × Confidence</div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">WebSocket Server</label>
+                    <input type="text" id="websocket-url" value="ws://localhost:3001" class="input-field">
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium text-gray-300">Auto-reconnect</label>
+                    <input type="checkbox" id="auto-reconnect" checked class="w-5 h-5 text-blue-600 rounded">
                 </div>
             </div>
-
-            <!-- Sessions List -->
-            <div id="sessions-list" class="space-y-4">
-                <div class="bg-gray-800 rounded-lg p-6 text-gray-400 text-center">
-                    Loading sessions...
-                </div>
-            </div>
         </div>
 
-        <!-- Error Toast -->
-        <div id="error-toast"
-             class="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-lg hidden transition-opacity duration-300">
-            <div class="flex items-center space-x-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div id="error-message" class="font-medium"></div>
-            </div>
-        </div>
+    </div>
 
-        <!-- Success Toast -->
-        <div id="success-toast"
-             class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg hidden transition-opacity duration-300">
-            <div class="flex items-center space-x-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <div id="success-message" class="font-medium"></div>
-            </div>
-        </div>
+    <!-- Toast Notifications -->
+    <div id="error-toast" class="toast toast-error hidden">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p id="error-message"></p>
+    </div>
+
+    <div id="success-toast" class="toast toast-success hidden">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <p id="success-message"></p>
     </div>
 
     <!-- Scripts -->
-    <script src="js/websocket.js"></script>
+    <script>
+        // Initialize particles
+        tsParticles.load("particles-bg", {
+            background: { color: { value: "transparent" } },
+            fpsLimit: 60,
+            particles: {
+                number: { value: 40, density: { enable: true, value_area: 800 } },
+                color: { value: "#3b82f6" },
+                shape: { type: "circle" },
+                opacity: { value: 0.3, random: false },
+                size: { value: 2, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#3b82f6",
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 1,
+                    direction: "none",
+                    random: false,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "grab" },
+                    onclick: { enable: false },
+                    resize: true
+                },
+                modes: {
+                    grab: { distance: 140, line_linked: { opacity: 0.5 } }
+                }
+            },
+            retina_detect: true
+        });
+    </script>
     <script src="js/audio.js"></script>
-    <script src="js/history.js"></script>
+    <script src="js/websocket.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
