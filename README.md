@@ -1,5 +1,9 @@
 # RealiBuddy
 
+🏆 **Winner - "Best AI/ML" Award at HackCC Hackathon** 🏆
+
+**Note:** This project was developed for the HackCC hackathon and is no longer under active development.
+
 Real-time lie detection: monitors speech/text, fact-checks via AI web search, delivers Pavlok feedback on false claims.
 
 **Status:** Fully functional. Uses beeps for testing (configurable to zaps).
